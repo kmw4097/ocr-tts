@@ -1,0 +1,77 @@
+// ignore_for_file: non_constant_identifier_names
+
+import 'package:flutter/material.dart';
+
+import 'TextSize.dart';
+
+class MyTheme {
+  MyTheme._();
+  static Color kPrimaryColor = const Color(0xff7C7B9B);
+  static Color kPrimaryColorVariant = const Color(0xff686795);
+  static Color kAccentColor = const Color(0xffFCAAAB);
+  static Color kAccentColorVariant = const Color(0xffF7A3A2);
+  static Color kUnreadChatBG = const Color(0xffEE1D1D);
+  static Color chatbotColor = Colors.lightGreen;
+  static Color userchatColor = Colors.white;
+  static Color shimmer_home_basecolor = Colors.blueGrey.shade400;
+  static Color shimmer_home_highlightcolor = Colors.blueGrey.shade100;
+  static Color colorWhite = Colors.white;
+  static Color colorblack = Colors.black;
+  static Color colorgrey = Colors.grey;
+  static Color colorgreyshade = Colors.grey.shade300;
+  static Color colorWhitestatus = Colors.transparent;
+  static Color colorblackstatus = Colors.transparent;
+  static Color colorWhite_drawer = Colors.white;
+  static Color colorblack_drawer = Colors.black;
+  static Color colorpurple = Colors.purple;
+  static Color colornotselected_drawer = Colors.black45;
+  static Color colorselected_black_drawer = Colors.deepPurple;
+  static Color colornotselected_black_drawer = Colors.white;
+  static Color colororigred = Colors.red;
+  static Color colororigorange = Colors.orange;
+  static Color colororigblue = Colors.blue;
+  static Color colororiggreen = Colors.green;
+  static Color colorpastelpink = Colors.pink.shade200;
+  static Color colorpastelorange = Colors.orange.shade200;
+  static Color colorpastelblue = Colors.blue.shade200;
+  static Color colorpastelgreen = Colors.green.shade200;
+  static Color colorpastelpurple = Colors.purple.shade200;
+  static TextStyle btntext = TextStyle(
+    color: MyTheme.colororigblue,
+    fontSize: contentTextsize(),
+    fontWeight: FontWeight.bold,
+    letterSpacing: 1.5,
+  );
+  static const TextStyle heading2 = TextStyle(
+    color: Color(0xff686795),
+    fontSize: 18,
+    fontWeight: FontWeight.w600,
+    letterSpacing: 1.5,
+  );
+
+  static const TextStyle chatSenderName = TextStyle(
+    color: Colors.white,
+    fontSize: 24,
+    fontWeight: FontWeight.bold,
+    letterSpacing: 1.5,
+  );
+
+  static const TextStyle bodyText1 = TextStyle(
+      color: Color(0xffAEABC9),
+      fontSize: 14,
+      letterSpacing: 1.2,
+      fontWeight: FontWeight.w500);
+
+  static const TextStyle bodyTextMessage = TextStyle(
+      fontSize: 13,
+      letterSpacing: 1.5,
+      fontWeight: FontWeight.w600,
+      overflow: TextOverflow.ellipsis);
+
+  static const TextStyle bodyTextTime = TextStyle(
+    color: Color(0xffAEABC9),
+    fontSize: 11,
+    fontWeight: FontWeight.bold,
+    letterSpacing: 1,
+  );
+}
