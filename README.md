@@ -11,6 +11,9 @@
 
 This project was conducted from August 2023 to November 2023 on the development of an ocr and tts model for Blind or Visually impaired people.
 
+Here is the site of
+[V Ridge](https://v-ridge.netlify.app/).
+
 ## Workflow
 
 We have a workflow that visualizes the ocr-tts algorithm written in Python through the Django-based backend and Flutter frontend. The following Built with describes which language is used for BackEnd, FrontEnd, and Algorithm respectively.
