@@ -35,6 +35,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     super.initState();
     scrollController = ScrollController();
     textcontroller = TextEditingController();
+    initSpeech();
     pdfViewerController = PdfViewerController();
   }
 
@@ -43,6 +44,11 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     super.dispose();
     textcontroller.dispose();
     scrollController.dispose();
+  }
+
+  /// This has to happen only once per app
+  void initSpeech() async {
+    speechEnabled = await uiset.speechToText.initialize();
   }
 
   @override

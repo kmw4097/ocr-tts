@@ -1,16 +1,13 @@
-// ignore_for_file: camel_case_types, prefer_typing_uninitialized_variables, non_constant_identifier_names, unused_local_variable
+// ignore_for_file: camel_case_types, prefer_typing_uninitialized_variables, non_constant_identifier_names
 
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
-import 'dart:typed_data';
 import 'package:get/get.dart';
 import '../Page/Insideview/homeview.dart';
 
 class FromBackend extends GetxController {
   final connect = GetConnect();
   String status = '';
-  String res = '';
 
   void setstatus(String what) {
     status = what;
@@ -28,8 +25,7 @@ class FromBackend extends GetxController {
         ? 'http://localhost:8000/topdf'
         : 'http://10.0.2.2:8000/topdf';
     var params = {
-      //'originalpath': uiset.filebytes,
-      'originalpath': uiset.filepaths,
+      'originalpath': uiset.filebytes,
     };
     status = '';
     Response response = await connect.request(starturl, 'get',
@@ -45,9 +41,8 @@ class FromBackend extends GetxController {
 
   // Fetchfile
   // 아래의 경로는 백엔드에서 결과값 경로로 지정한 경로로 수정...
-  // 서버에서 pdf 파일, txt, mp3의 저장된 경로를 딕셔너리상태로 불러옴
+  // 서버에서 pdf 파일의 UInt8bytes를 불러옴
   Stream Fetchfile() async* {
-    var filepath, filebyte, txtpath, mp3path;
     String starturl = GetPlatform.isWeb
         ? 'http://localhost:8000/topdf'
         : 'http://10.0.2.2:8000/topdf';
@@ -55,12 +50,6 @@ class FromBackend extends GetxController {
     response = await connect.get(starturl);
     if (response.statusCode == 200 || response.statusCode == 201) {
       status = '';
-      filebyte = await loadfile2_1(response.body[0]);
-      txtpath = response.body[1];
-      mp3path = response.body[2];
-      uiset.setpdffilebytes(filebyte);
-      uiset.settxtfilepath(txtpath);
-      uiset.setmp3filepath(mp3path);
     } else if (response.statusCode == 500) {
       status = 'Bad Request';
       uiset.setprocesslist(0);
@@ -72,95 +61,51 @@ class FromBackend extends GetxController {
 
     update();
     notifyChildrens();
-    yield filepath;
-  }
-
-  Future<Uint8List?> loadfile2_1(String filePath) async {
-    try {
-      final file = File(filePath);
-      if (await file.exists()) {
-        Uint8List bytes = await file.readAsBytes();
-        return bytes;
-      }
-    } catch (e) {
-      print("Error loading file as bytes: $e");
-    }
-    return null;
+    yield response.body;
   }
 
   // tosendpdf
-  // 서버에서 이미 받은 txt, mp3파일을 재확인 및 재할당함수로 수정함.
-  void tosendfiles() async {
-    uiset.settxtfilepath(uiset.txtpaths);
-    uiset.setmp3filepath(uiset.mp3paths);
-    //Fetchtext();
-
-    update();
-    notifyChildrens();
+  // 아래의 경로는 백엔드 파트에 기입한 경로대로 수정하는걸로...
+  // 서버에 pdf를 보내 텍스트 및 보이스 변환
+  Future tosendpdf() async {
+    // 아래의 경로는 백엔드 파트에 기입한 경로대로 수정하는걸로...
+    String starturl = GetPlatform.isWeb
+        ? 'http://localhost:8000/tochange'
+        : 'http://10.0.2.2:8000/tochange';
+    var params = {
+      'resultpath': uiset.filebytes,
+    };
+    status = '';
+    Response response = await connect.request(starturl, 'get',
+        headers: <String, String>{
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Access-Control-Allow-Headers': '*'
+        },
+        body: jsonEncode(params));
+    uiset.setloading(true, 0);
+    return response.body;
   }
 
   // Fetchtextorvoice
-  // 서버에서 텍스트를 불러옴
-  Future Fetchtext() async {
-    var filetxt;
-    filetxt = await readTextFromFile(uiset.txtpaths);
-    uiset.settxtfilecontent(filetxt);
-
-    return filetxt;
-  }
-
-  Future<String?> readTextFromFile(String filePath) async {
-    try {
-      File file = File(filePath);
-      if (await file.exists()) {
-        String contents = await file.readAsString();
-        return contents;
-      } else {
-        print("File not found: $filePath");
-        return null;
-      }
-    } catch (e) {
-      print("Error reading file: $e");
-      return null;
+  // 아래의 경로는 백엔드에서 결과값 경로로 지정한 경로로 수정...
+  // 서버에서 텍스트 및 보이스를 불러옴
+  Stream Fetchtextorvoice(String what) async* {
+    String starturl = GetPlatform.isWeb
+        ? 'http://localhost:8000/tochange/$what'
+        : 'http://10.0.2.2:8000/tochange/$what';
+    Response response = await connect.get(starturl);
+    response = await connect.get(starturl);
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      status = '';
+    } else if (response.statusCode == 500) {
+      status = 'Bad Request';
+    } else if (response.statusCode == null) {
+      status = 'Server Not Exists';
     }
-  }
-
-// Fetchtextorvoice
-  // 서버에서 텍스트를 불러옴
-  Future Fetchvoice() async {
-    var filemp3;
-    filemp3 = await loadmp3File(uiset.mp3paths);
-
     uiset.setloading(false, 0);
-    return filemp3;
-  }
-
-  Future<String?> loadmp3File(String filePath) async {
-    try {
-      final file = File(filePath);
-      if (await file.exists()) {
-        String textContent = await file.readAsString();
-        return textContent;
-      }
-    } catch (e) {
-      print("Error loading text file: $e");
-    }
-    return null;
-  }
-
-  String replaceurl(String what, int section) {
-    var re_url;
-    //textContent = what.replaceAll('\\', '\\\\');
-    //textContent = what.replaceAll('\\\\', '/');
-    re_url = what.replaceAll(r'\', '/');
-    if (section == 0) {
-      uiset.settxtfilepath(re_url);
-    } else if (section == 1) {
-      uiset.settxtfilepath(re_url);
-    } else {
-      uiset.setmp3filepath(re_url);
-    }
-
-    return re_url;
+    update();
+    notifyChildrens();
+    yield response.body;
   }
 }
