@@ -61,6 +61,7 @@ dependencies:
   image_picker:
   file_picker:
   syncfusion_flutter_pdfviewer:
+  open_file:
   # Use these library for info
   permission_handler: 
   path_provider: 
@@ -68,16 +69,6 @@ dependencies:
   device_info_plus:
   mobile_device_identifier :
   platform:  
-  # Use these library for firebase
-  firebase_core_web:
-  firebase_storage: 
-  firebase_storage_web:
-  cloud_firestore: 
-  cloud_firestore_web: 
-  firebase_auth: 
-  firebase_auth_web: 
-  firebase_core: 
-  speech_to_text:
 
 dev_dependencies:
   flutter_test:
