@@ -4,8 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
-import 'package:speech_to_text/speech_recognition_result.dart';
-import 'package:speech_to_text/speech_to_text.dart';
 import '../Tool/MyTheme.dart';
 
 class UIPart extends GetxController {
@@ -17,6 +15,9 @@ class UIPart extends GetxController {
   int pagenumber = 0;
   Uint8List filebytes = Uint8List(1);
   String filepaths = '';
+  String txtpaths = '';
+  String mp3paths = '';
+  String txtcontents = '';
   int filelen = 0;
   bool isclikedpdf = false;
   int clickwhat = 99;
@@ -41,7 +42,6 @@ class UIPart extends GetxController {
   Locale? locale;
   int selecttxtscaler = 2;
   String lastword = '';
-  SpeechToText speechToText = SpeechToText();
 
   ///loadLocale
   ///
@@ -233,36 +233,7 @@ class UIPart extends GetxController {
     notifyChildrens();
   }
 
-  /// Each time to start a speech recognition session
-  void startListening() async {
-    await speechToText.listen(
-      onResult: onSpeechResult,
-      localeId: 'ko_KR',
-      cancelOnError: false,
-      partialResults: false,
-      listenMode: ListenMode.confirmation,
-    );
-    update();
-    notifyChildrens();
-  }
-
-  /// Manually stop the active speech recognition session
-  /// Note that there are also timeouts that each platform enforces
-  /// and the SpeechToText plugin supports setting timeouts on the
-  /// listen method.
-  void stopListening() async {
-    await speechToText.stop();
-    update();
-    notifyChildrens();
-  }
-
-  /// This is the callback that the SpeechToText plugin calls when
-  /// the platform returns recognized words.
-  void onSpeechResult(SpeechRecognitionResult result) {
-    lastword = result.recognizedWords;
-    update();
-    notifyChildrens();
-  }
+  /// Each
 
   void setpdffilebytes(Uint8List what) {
     filebytes = what;
@@ -274,6 +245,24 @@ class UIPart extends GetxController {
   void setpdffilepath(String what) {
     filepaths = what;
     setclickedpdf(true);
+    update();
+    notifyChildrens();
+  }
+
+  void settxtfilepath(String what) {
+    txtpaths = what;
+    update();
+    notifyChildrens();
+  }
+
+  void settxtfilecontent(String what) {
+    txtcontents = what;
+    update();
+    notifyChildrens();
+  }
+
+  void setmp3filepath(String what) {
+    mp3paths = what;
     update();
     notifyChildrens();
   }
