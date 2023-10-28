@@ -72,6 +72,7 @@ class Viewer:
       raise Exception("Not Available File Type(Can Convert PDF,Word Type)")
 
   def __call__(self, path : str = ''):
+    global USER_OS
     self.fPath = path
     self.get_file_info()
     if USER_OS == 'Darwin':
