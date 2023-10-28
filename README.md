@@ -14,6 +14,9 @@ This project was conducted from August 2023 to November 2023 on the development 
 Here is the site of
 [V Ridge](https://v-ridge.netlify.app/).
 
+Here is the window app
+[Window app](https://github.com/pytorch-team/ocr-tts/releases/download/%EC%9C%88%EB%8F%84%EC%9A%B0%EC%95%B1/app.exe).
+
 ## Workflow
 
 We have a workflow that visualizes the ocr-tts algorithm written in Python through the Django-based backend and Flutter frontend. The following Built with describes which language is used for BackEnd, FrontEnd, and Algorithm respectively.
