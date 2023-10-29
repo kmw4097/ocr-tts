@@ -2,6 +2,7 @@ import subprocess
 import os
 import shutil
 import platform
+import sys
 
 USER_OS = platform.system()
 
@@ -13,7 +14,7 @@ if USER_OS == 'Darwin':
   except:
     # if not work [pip install docx2pdf] code, you have to use this code first;
     # [brew install aljohri/-/docx2pdf]
-    subprocess.run(['pip', 'install', 'docx2pdf'])
+    subprocess.run([sys.executable,'-m','pip', 'install', 'docx2pdf'])
     from docx2pdf import convert
 
 # On Windows or Linux
@@ -42,29 +43,29 @@ class Viewer:
       raise Exception("'path' must be file type, not directory")
     self.fFullName = os.path.split(self.fPath)[1]
     self.fName, self.fExtension = os.path.splitext(self.fFullName)
+    self.outputPath = self.rootDirPath+'/PDF/'+self.fName+'.pdf'
 
   def file_convert_Windows_or_Linux(self):
     if self.fExtension == '.pdf':
-      shutil.move(self.rootDirPath+self.fFullName,self.rootDirPath+'/PDF/'+self.fFullName)
+      shutil.move(self.rootDirPath+self.fFullName,self.outputPath)
     elif (self.fExtension == '.doc') | (self.fExtension == '.docx'):
       doc = aw.Document(self.fPath)
-      doc.save(self.rootDirPath+'/PDF/'+self.fName+'.pdf')
+      doc.save(self.outputPath)
     elif (self.fExtension == '.ppt') | (self.fExtension == '.pptx'):
       pres = slides.Presentation(self.fPath)
-      pres.save(self.rootDirPath+'/PDF/'+self.fName+'.pdf', slides.export.SaveFormat.PDF)
+      pres.save(self.outputPath, slides.export.SaveFormat.PDF)
     else:
       raise Exception("Not Available File Type(Can Convert PDF,Word,PPT Type)")
 
   def file_convert_MacOS(self):
     if self.fExtension == '.pdf':
-      shutil.move(self.rootDirPath+self.fFullName,self.rootDirPath+'/PDF/'+self.fFullName)
+      shutil.move(self.rootDirPath+self.fFullName,self.outputPath)
     elif (self.fExtension == '.doc') | (self.fExtension == '.docx'):
       inputFile = self.fPath
-      outputFile = self.rootDirPath+'/PDF/'+self.fName+'.pdf'
-      file = open(outputFile, "w")
+      file = open(self.outputPath, "w")
       file.close()
 
-      convert(inputFile, outputFile)
+      convert(inputFile, self.outputPath)
       
     elif (self.fExtension == '.ppt') | (self.fExtension == '.pptx'):
       raise Exception("This Function will be develped!!!!")
