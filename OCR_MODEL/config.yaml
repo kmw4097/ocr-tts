@@ -1,0 +1,5 @@
+detection: yolov5/runs/train/exp18/weights/best.pt
+detection-size: 640
+detection-confidence: 0.25
+detection-iou: 0.25
+recognition_model_path: recognition/iter_20000.pth
