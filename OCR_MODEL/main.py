@@ -81,7 +81,7 @@ def run():
         # tts ssml version
         ssml_doc = make_ssml(sorted_bbox_list)
         # print(ssml_doc)
-        run_tts(ssml_doc, str(top_dir)+'/MP3/'+img_o[:-4]+'_ssml' + '.mp3')
+        # run_tts(ssml_doc, str(top_dir)+'/MP3/'+img_o[:-4]+'_ssml' + '.mp3')
 
 
     for file in os.listdir(img_dir):
