@@ -24,7 +24,7 @@ else:
     import aspose.slides as slides
 
   except:
-    subprocess.run(['pip', 'install', 'aspose-words', 'aspose.slides'])
+    subprocess.run([sys.executable, '-m', 'pip', 'install', 'aspose-words', 'aspose.slides'])
     import aspose.words as aw
     import aspose.slides as slides
 
@@ -47,7 +47,7 @@ class Viewer:
 
   def file_convert_Windows_or_Linux(self):
     if self.fExtension == '.pdf':
-      shutil.move(self.rootDirPath+self.fFullName,self.outputPath)
+      shutil.move(self.fPath,self.outputPath)
     elif (self.fExtension == '.doc') | (self.fExtension == '.docx'):
       doc = aw.Document(self.fPath)
       doc.save(self.outputPath)
@@ -59,7 +59,7 @@ class Viewer:
 
   def file_convert_MacOS(self):
     if self.fExtension == '.pdf':
-      shutil.move(self.rootDirPath+self.fFullName,self.outputPath)
+      shutil.move(self.fPath,self.outputPath)
     elif (self.fExtension == '.doc') | (self.fExtension == '.docx'):
       inputFile = self.fPath
       file = open(self.outputPath, "w")
