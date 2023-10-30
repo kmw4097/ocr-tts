@@ -10,7 +10,7 @@ import sys
 # 상위 디렉토리 모듈 접근하기 위해 경로 추가
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))
 
-import viewer
+from viewer import Viewer
 
 
 
@@ -18,26 +18,37 @@ import viewer
 class ConvertView(viewsets.ModelViewSet):
     queryset = Convert.objects.all()
     serializer_class = ConvertSerializer
-    my_viewer = viewer.Viewer()
-    def UserFileToPDF(self, path=''):
-        self.my_viewer(path)
+    my_viewer = Viewer()
 
+    def UserFileToPDF(self, path=''):
+        self.my_viewer(path= path)
         return {'fileName' : self.my_viewer.fName, 'pdfFilePath' : self.my_viewer.outputPath}
     
     def PdfFileToMp3(self):
         return {'mp3FilePath' : ''}
 
-    @action(detail=False, methods=['GET'])
+    # url : http://localhost:8000/convert/ConvertFile
+    @action(detail=False, methods=['POST'])
     def ConvertFile(self, request):
         file_info = request.data
         filePath = file_info['filePath']
-        print('file path : {}'.format(filePath))
         pdfFileInfo = self.UserFileToPDF(path=filePath)
         mp3FileInfo = self.PdfFileToMp3()
-        serializer = ConvertSerializer({
-            'fileName' : pdfFileInfo['fileName'],
-            'pdfFilePath' : pdfFileInfo['pdfFilePath'],
-            'mp3FilePath' : mp3FileInfo['mp3FilePath']
-        }, many=True)
+        
+        Convert.objects.create(
+            fileName = pdfFileInfo['fileName'],
+            pdfFilePath = pdfFileInfo['pdfFilePath'],
+            mp3FilePath = mp3FileInfo['mp3FilePath']
+        )
+
+        return Response({'message' : f"File '{pdfFileInfo['fileName']}' is successfully converted"}, status=200)
+    
+    #http://localhost:8000/convert/GetPath
+    @action(detail = False, methods=['GET'])
+    def GetPath(self, request):
+        user_request = request.data
+        request_file = user_request['fileName']
+        file_info = self.queryset.filter(fileName = request_file)
+        serializer = self.get_serializer(file_info, many=True)
 
         return Response(serializer.data)
