@@ -1,5 +1,6 @@
 // ignore_for_file: prefer_typing_uninitialized_variables, unused_local_variable, non_constant_identifier_names, camel_case_types, file_names
 
+import 'package:dplit/GetPart/FromBackend.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
@@ -22,6 +23,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   late ScrollController scrollController;
   late TextEditingController textcontroller;
   final uiset = Get.put(UIPart());
+  final fb = Get.put(FromBackend());
   bool speechEnabled = false;
   late PdfViewerController pdfViewerController;
 
@@ -36,6 +38,13 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     scrollController = ScrollController();
     textcontroller = TextEditingController();
     pdfViewerController = PdfViewerController();
+    fb.setAudio();
+    fb.player.onDurationChanged.listen((newDuration) {
+      fb.setDuration(newDuration);
+    });
+    fb.player.onPositionChanged.listen((newPosition) {
+      fb.setPosition(newPosition);
+    });
   }
 
   @override

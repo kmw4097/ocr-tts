@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:window_manager/window_manager.dart';
 import 'Locale/locale.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
 import 'Page/Insideview/homeview.dart';
@@ -12,6 +13,12 @@ import 'Page/HomePage.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  if (GetPlatform.isWindows || GetPlatform.isMacOS) {
+    await windowManager.ensureInitialized();
+    WindowManager.instance.setMinimumSize(const Size(1200, 600));
+    //WindowManager.instance.setMaximumSize(const Size(1200, 600));
+  }
   usePathUrlStrategy();
   await GetStorage.init();
   runApp(const MyApp());

@@ -5,12 +5,17 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:get/get.dart';
+import 'package:audioplayers/audioplayers.dart';
 import '../Page/Insideview/homeview.dart';
 
 class FromBackend extends GetxController {
   final connect = GetConnect();
   String status = '';
   String res = '';
+  String playing = 'stop';
+  final player = AudioPlayer();
+  Duration duration = Duration.zero;
+  Duration position = Duration.zero;
 
   void setstatus(String what) {
     status = what;
@@ -61,6 +66,8 @@ class FromBackend extends GetxController {
       uiset.setpdffilebytes(filebyte);
       uiset.settxtfilepath(txtpath);
       uiset.setmp3filepath(mp3path);
+
+      yield filebyte;
     } else if (response.statusCode == 500) {
       status = 'Bad Request';
       uiset.setprocesslist(0);
@@ -72,7 +79,7 @@ class FromBackend extends GetxController {
 
     update();
     notifyChildrens();
-    yield filepath;
+    yield null;
   }
 
   Future<Uint8List?> loadfile2_1(String filePath) async {
@@ -105,6 +112,9 @@ class FromBackend extends GetxController {
     var filetxt;
     filetxt = await readTextFromFile(uiset.txtpaths);
     uiset.settxtfilecontent(filetxt);
+    if (filetxt == '') {
+      setstatus('Bad Request');
+    }
 
     return filetxt;
   }
@@ -116,36 +126,54 @@ class FromBackend extends GetxController {
         String contents = await file.readAsString();
         return contents;
       } else {
-        print("File not found: $filePath");
-        return null;
+        return filePath;
       }
     } catch (e) {
-      print("Error reading file: $e");
-      return null;
+      return filePath;
     }
   }
 
-// Fetchtextorvoice
+  Future setAudio() async {
+    var filemp3;
+    uiset.setmp3filepath('');
+    filemp3 = await loadmp3File(uiset.mp3paths);
+    if (filemp3 == null) {
+      setstatus('Bad Request');
+    } else {
+      isplaying('stop');
+      player.setReleaseMode(ReleaseMode.loop);
+      await player.setSourceDeviceFile(uiset.mp3paths);
+    }
+  }
+
+  // Fetchtextorvoice
   // 서버에서 텍스트를 불러옴
   Future Fetchvoice() async {
     var filemp3;
+    uiset.setmp3filepath('C:/Users/chosungsu/Desktop/audio.mp3');
+    //
     filemp3 = await loadmp3File(uiset.mp3paths);
-
+    if (filemp3 == null) {
+      setstatus('Bad Request');
+    } else {
+      isplaying('stop');
+      player.setReleaseMode(ReleaseMode.loop);
+      await player.setSourceDeviceFile(uiset.mp3paths);
+    }
     uiset.setloading(false, 0);
     return filemp3;
   }
 
-  Future<String?> loadmp3File(String filePath) async {
+  Future<AudioPlayer?> loadmp3File(String filePath) async {
     try {
-      final file = File(filePath);
-      if (await file.exists()) {
-        String textContent = await file.readAsString();
-        return textContent;
-      }
+      /*assetsAudioPlayer.open(
+        Audio.file(filePath),
+      );*/
+      await player.setSourceDeviceFile(filePath);
+      return player;
     } catch (e) {
-      print("Error loading text file: $e");
+      return null;
     }
-    return null;
   }
 
   String replaceurl(String what, int section) {
@@ -162,5 +190,25 @@ class FromBackend extends GetxController {
     }
 
     return re_url;
+  }
+
+  void isplaying(String what) {
+    playing = what;
+    update();
+    notifyChildrens();
+  }
+
+  void setDuration(Duration what) {
+    duration = what;
+
+    update();
+    notifyChildrens();
+  }
+
+  void setPosition(Duration what) {
+    position = what;
+
+    update();
+    notifyChildrens();
   }
 }
