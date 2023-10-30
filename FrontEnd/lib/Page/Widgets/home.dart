@@ -1,6 +1,7 @@
 // ignore_for_file: deprecated_member_use, non_constant_identifier_names, prefer_typing_uninitialized_variables, unused_local_variable
 
 import 'dart:io';
+import 'package:audioplayers/audioplayers.dart';
 import 'package:dplit/GetPart/FromBackend.dart';
 import 'package:dplit/GetPart/UIPart.dart';
 import 'package:dplit/Tool/MyTheme.dart';
@@ -157,13 +158,14 @@ Searchview(context, maxHeight, maxWidth, searchNode, section) {
                                         label: '파일 변경을 원하시면 우측 x표시를 클릭해주세요!');
                                   } else {
                                     uiset.setclickedpdf(false);
+                                    fb.setstatus('');
                                     // 이 코드는 새로 변경된 부분으로
                                     // 서버로 보내기 전 기존 로컬 파일경로를 받아옴.
                                     filepath = await loadfile3();
                                     if (filepath != null) {
                                       uiset.setpdffilepath(filepath);
                                       uiset.setclickwhat(1);
-                                      uiset.setprocesslist(1);
+                                      uiset.setprocesslist(0);
                                       // 이 부분부터는 현재는 pdf, xlsx, docs 등을 받아
                                       // 처리를 하고 있고 백엔드 서버로 filesomething값을
                                       // 보내어 다시 리턴(온전한 pdf값으로)받도록 하는 로직이 필요하다.
@@ -235,10 +237,10 @@ Searchview(context, maxHeight, maxWidth, searchNode, section) {
                                     uiset.setstart(false);
                                   } else {
                                     uiset.setstart(!uiset.isstart);
-                                    // 이 부분부터는 백엔드 서버로 변환요청을 보내고
-                                    // 텍스트로 pdf한장씩 분석한 결과값은 To텍스트로
-                                    // 그를 음성으로 변환한 결과값은 To보이스로 보내는 로직이 필요하다.
                                     uiset.settxtfilecontent('');
+                                    fb.setAudio();
+                                    fb.isplaying('stop');
+                                    fb.player.stop();
                                     fb.tosendfiles();
                                   }
                                 },
@@ -266,11 +268,14 @@ Searchview(context, maxHeight, maxWidth, searchNode, section) {
                     flex: 1,
                     child: InkWell(
                         onTap: () {
-                          //fb.setstatus('');
+                          fb.setstatus('');
                           uiset.setclickedpdf(false);
                           uiset.filepaths = '';
                           uiset.filebytes = Uint8List(1);
                           uiset.setprocesslist(0);
+                          fb.setAudio();
+                          fb.isplaying('stop');
+                          fb.player.stop();
                           uiset.setstart(false);
                           //uiset.filebytes = '';
                         },
@@ -400,9 +405,8 @@ PDFDashboard(
                                   return StreamBuilder(
                                     stream: fb.Fetchfile(),
                                     builder: (context, snapshot) {
-                                      if (snapshot.hasData) {
-                                        /*uiset.setpdffilebytes(
-                                            snapshot.data as Uint8List);*/
+                                      if (snapshot.data != null) {
+                                        uiset.setprocesslist(1);
                                         return SfPdfViewer.memory(
                                           uiset.filebytes,
                                           controller: pdfViewerController,
@@ -592,7 +596,7 @@ Settingview(context, maxHeight, maxWidth, searchNode, section) {
                   builder: (_) {
                     return uiset.isstart
                         ? Viewdrawerbox(uiset.drawerlist.indexOf(true))
-                        : const SizedBox();
+                        : NoneViewBox(context, uiset.drawerlist.indexOf(true));
                   },
                 ))
           ],
@@ -609,7 +613,7 @@ Viewdrawerbox(section) {
           return FutureBuilder(
             future: fb.Fetchtext(),
             builder: (context, snapshot) {
-              if (snapshot.hasData) {
+              if (snapshot.data != '') {
                 return Text(
                   uiset.txtcontents,
                   textAlign: TextAlign.center,
@@ -698,17 +702,156 @@ Viewdrawerbox(section) {
             return FutureBuilder(
               future: fb.Fetchvoice(),
               builder: (context, snapshot) {
-                if (snapshot.hasData) {
-                  return Text(
-                    snapshot.data as String,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                        wordSpacing: 2,
-                        letterSpacing: 2,
-                        fontWeight: FontWeight.bold,
-                        fontSize: contentTextsize(),
-                        color: MyTheme.colororigred),
-                  );
+                if (snapshot.hasData || uiset.mp3paths != '') {
+                  return SizedBox(
+                      child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Slider(
+                          min: 0,
+                          max: fb.duration.inSeconds.toDouble(),
+                          value: fb.position.inSeconds.toDouble(),
+                          onChanged: (value) async {
+                            final position = Duration(seconds: value.toInt());
+                            await fb.player.seek(position);
+                          }),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              formatTime(fb.position),
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                  wordSpacing: 2,
+                                  letterSpacing: 2,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: contentTextsize(),
+                                  color: MyTheme.colorblack),
+                            ),
+                            Text(
+                              formatTime(fb.duration),
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                  wordSpacing: 2,
+                                  letterSpacing: 2,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: contentTextsize(),
+                                  color: MyTheme.colorblack),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            /*InkWell(
+                              onTap: () {
+                                IconSnackBar.show(
+                                    context: context,
+                                    snackBarType: SnackBarType.fail,
+                                    label: '상단의 변환과정을 먼저 수행하셔야 합니다.');
+                              },
+                              child: Icon(
+                                Feather.rotate_ccw,
+                                color: MyTheme.colorblack,
+                                size: iconsize(),
+                              ),
+                            ),
+                            const SizedBox(
+                              width: 10,
+                            ),*/
+                            fb.playing == 'play' ||
+                                    fb.playing == 'pause' ||
+                                    fb.playing == 'resume'
+                                ? Row(
+                                    children: [
+                                      InkWell(
+                                        onTap: () async {
+                                          fb.isplaying('stop');
+                                          await fb.player.stop();
+                                        },
+                                        child: GetBuilder<FromBackend>(
+                                            builder: (_) {
+                                          return Icon(
+                                            Ionicons.stop,
+                                            color: MyTheme.colororigred,
+                                            size: largeiconsize(),
+                                          );
+                                        }),
+                                      ),
+                                      const SizedBox(
+                                        width: 10,
+                                      ),
+                                      InkWell(
+                                        onTap: () async {
+                                          if (fb.playing == 'pause') {
+                                            fb.isplaying('resume');
+                                            await fb.player.resume();
+                                          } else {
+                                            fb.isplaying('pause');
+                                            await fb.player.pause();
+                                          }
+                                        },
+                                        child: GetBuilder<FromBackend>(
+                                            builder: (_) {
+                                          return Icon(
+                                            fb.playing == 'pause'
+                                                ? AntDesign.play
+                                                : AntDesign.pausecircle,
+                                            color: MyTheme.colororigblue,
+                                            size: largeiconsize(),
+                                          );
+                                        }),
+                                      ),
+                                    ],
+                                  )
+                                : InkWell(
+                                    onTap: () async {
+                                      fb.isplaying('play');
+                                      await fb.player
+                                          .play(UrlSource(uiset.mp3paths));
+
+                                      /*IconSnackBar.show(
+                                context: context,
+                                snackBarType: SnackBarType.fail,
+                                label: '상단의 변환과정을 먼저 수행하셔야 합니다.');*/
+                                    },
+                                    child:
+                                        GetBuilder<FromBackend>(builder: (_) {
+                                      return Icon(
+                                        AntDesign.play,
+                                        color: MyTheme.colororigblue,
+                                        size: largeiconsize(),
+                                      );
+                                    }),
+                                  ),
+                            /*const SizedBox(
+                              width: 10,
+                            ),
+                            InkWell(
+                              onTap: () {
+                                IconSnackBar.show(
+                                    context: context,
+                                    snackBarType: SnackBarType.fail,
+                                    label: '상단의 변환과정을 먼저 수행하셔야 합니다.');
+                              },
+                              child: Icon(
+                                Feather.rotate_cw,
+                                color: MyTheme.colorblack,
+                                size: iconsize(),
+                              ),
+                            ),*/
+                          ],
+                        ),
+                      )
+                    ],
+                  ));
                 } else {
                   if (fb.status == 'Bad Request' ||
                       fb.status == 'Server Not Exists') {
@@ -782,4 +925,104 @@ Viewdrawerbox(section) {
             );
           }),
         );
+}
+
+NoneViewBox(context, section) {
+  return section == 0
+      ? Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Text(
+              '상단의 변환과정을 먼저 수행하셔야 합니다.',
+              maxLines: 2,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                  color: MyTheme.colorgrey,
+                  fontWeight: FontWeight.bold,
+                  fontSize: contentTextsize()),
+              overflow: TextOverflow.ellipsis,
+            )
+          ],
+        )
+      : SizedBox(
+          child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Slider(
+                min: 0,
+                max: 0,
+                value: fb.position.inSeconds.toDouble(),
+                onChanged: (value) async {
+                  //final position = Duration(seconds: value.toInt());
+                  //await fb.player.seek(position);
+                }),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    formatTime(fb.position),
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                        wordSpacing: 2,
+                        letterSpacing: 2,
+                        fontWeight: FontWeight.bold,
+                        fontSize: contentTextsize(),
+                        color: MyTheme.colorblack),
+                  ),
+                  Text(
+                    formatTime(fb.duration),
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                        wordSpacing: 2,
+                        letterSpacing: 2,
+                        fontWeight: FontWeight.bold,
+                        fontSize: contentTextsize(),
+                        color: MyTheme.colorblack),
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  InkWell(
+                    onTap: () async {
+                      IconSnackBar.show(
+                          context: context,
+                          snackBarType: SnackBarType.fail,
+                          label: '상단의 변환과정을 먼저 수행하셔야 합니다.');
+                    },
+                    child: GetBuilder<FromBackend>(builder: (_) {
+                      return Icon(
+                        AntDesign.play,
+                        color: MyTheme.colororigblue,
+                        size: largeiconsize(),
+                      );
+                    }),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ));
+}
+
+formatTime(Duration durationone) {
+  String twoDigits(int n) => n.toString().padLeft(2, '0');
+  final hours = twoDigits(durationone.inHours);
+  final minutes = twoDigits(durationone.inMinutes.remainder(60));
+  final seconds = twoDigits(durationone.inSeconds.remainder(60));
+
+  return [
+    if (durationone.inHours > 0) hours,
+    minutes,
+    seconds,
+  ].join(' : ');
 }

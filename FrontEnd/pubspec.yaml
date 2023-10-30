@@ -41,6 +41,7 @@ dependencies:
   js: 
   # Use this library for size responsive layout setting
   responsive_sizer:
+  window_manager:
   # Use these library for variable themes
   flutter_vector_icons:
   flutter_spinkit: 

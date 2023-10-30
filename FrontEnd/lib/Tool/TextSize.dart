@@ -30,6 +30,12 @@ double contentsmallTextsize() {
   return ts;
 }
 
+double largeiconsize() {
+  double ts = 0;
+  ts = largeiconsizer[uiset.selecttxtscaler];
+  return ts;
+}
+
 double iconsize() {
   double ts = 0;
   ts = iconsizer[uiset.selecttxtscaler];
