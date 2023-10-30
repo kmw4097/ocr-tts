@@ -1,19 +1,35 @@
 import sys
 import os
-from pathlib import Path
-model_dir = os.path.dirname(os.path.realpath(__file__))
-sys.path.append(model_dir)
-import torch
+import subprocess
+
 from detect.detection import text_detection
-from pdf2image import convert_from_path
 from recognition.model import RecogModel
 from TTS.tts import run_tts, make_ssml
 from utils.util import sorting_bounding_box
-from pyssml.PySSML import PySSML
 from utils.general import *
 from data.image_preprocessing import Load_Image
 import glob
-from yolov5.models.experimental import attempt_load
+
+from pathlib import Path
+model_dir = os.path.dirname(os.path.realpath(__file__))
+sys.path.append(model_dir)
+try:
+    import torch
+
+    # if not work [pip install pdf2image] code, you have to use this code first;
+    # [brew install poppler] or [conda install -c conda-forge poppler]
+    from pdf2image import convert_from_path
+    from pyssml.PySSML import PySSML
+    from yolov5.models.experimental import attempt_load
+except:
+    subprocess.run([sys.executable, '-m', 'pip', 'install',
+                    'torch', 'pdf2image', 'pyssml', 'yolov5'])
+    import torch
+    from pdf2image import convert_from_path
+    from pyssml.PySSML import PySSML
+    from yolov5.models.experimental import attempt_load
+
+
 
 def run():
     #device 설정
