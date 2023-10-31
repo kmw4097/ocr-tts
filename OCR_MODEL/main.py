@@ -46,15 +46,21 @@ def run():
     for pdf in os.listdir(pdf_dir):
         if pdf =='.DS_Store':
             continue
-        pages = convert_from_path(os.path.join(pdf_dir,pdf), dpi=600, poppler_path=model_dir+'/poppler-23.08.0/Library/bin')
+
+        pages = convert_from_path(os.path.join(pdf_dir,pdf), dpi=600,
+                                #poppler_path=os.path.join(model_dir,'poppler-23.08.0/Library/bin')
+                                )
         for j, page in enumerate(pages):
             page.save(f'{img_dir}/{os.path.basename(pdf)[:-4]}_page{j + 1:0>2d}.png')
 
 
     #detection model setting
     detection_weight= Path(model_dir +'/detect/best.pt')
-    detection_model = attempt_load(detection_weight,device)
-
+    try:
+        detection_model = attempt_load(detection_weight,device)
+    except:
+        subprocess.run([sys.executable, '-m', 'pip', 'install', 'easydict'])
+        detection_model = attempt_load(detection_weight,device)
 
     #recognition model setting
     recognition_weight= Path(model_dir +'/recognition/iter_150000_aihub_4000_pretrained.pth')

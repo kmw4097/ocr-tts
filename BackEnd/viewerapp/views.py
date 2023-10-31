@@ -46,8 +46,9 @@ class ConvertView(viewsets.ModelViewSet):
     #http://localhost:8000/convert/GetPath
     @action(detail = False, methods=['GET'])
     def GetPath(self, request):
-        user_request = request.data
-        request_file = user_request['fileName']
+        #user_request = request.data
+        #request_file = user_request['fileName']
+        request_file = request.GET['fileName']
         file_info = self.queryset.filter(fileName = request_file)
         serializer = self.get_serializer(file_info, many=True)
 
