@@ -1,18 +1,11 @@
 import sys
 import os
 import subprocess
-
-from detect.detection import text_detection
-from recognition.model import RecogModel
-from TTS.tts import run_tts, make_ssml
-from utils.util import sorting_bounding_box
-from utils.general import *
-from data.image_preprocessing import Load_Image
-import glob
-
+import importlib.util
 from pathlib import Path
 model_dir = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(model_dir)
+
 try:
     import torch
 
@@ -20,14 +13,53 @@ try:
     # [brew install poppler] or [conda install -c conda-forge poppler]
     from pdf2image import convert_from_path
     from pyssml.PySSML import PySSML
-    from yolov5.models.experimental import attempt_load
 except:
     subprocess.run([sys.executable, '-m', 'pip', 'install',
-                    'torch', 'pdf2image', 'pyssml', 'yolov5'])
+                    'torch', 'pdf2image', 'pyssml','numpy','pandas'])
+    install_list = ['torch','pdf2image','pyssml','numpy','pandas']
+
+    while len(install_list) == 0:
+        for lib in install_list:
+            spec = importlib.util.find_spec(lib)
+            if spec:
+                install_list.remove(lib)
+    print('install done')
     import torch
     from pdf2image import convert_from_path
     from pyssml.PySSML import PySSML
+    print('import done')
+try:
     from yolov5.models.experimental import attempt_load
+    from detect.detection import text_detection
+    from recognition.model import RecogModel
+    from TTS.tts import run_tts, make_ssml
+    from utils.util import sorting_bounding_box
+    from utils.general import *
+    from data.image_preprocessing import Load_Image
+    import glob
+    import easydict
+except:
+    subprocess.run([sys.executable, '-m', 'pip', 'install',
+                    'numpy','requests','torchvision',
+                   'opencv-python','boto3','easydict'
+                    ])
+
+    install_list = ['numpy','requests','torchvision','opencv-python','boto3','easydict']
+    while len(install_list) == 0:
+        for lib in install_list:
+            spec = importlib.util.find_spec(lib)
+            if spec:
+                install_list.remove(lib)
+    print('install done')
+    from yolov5.models.experimental import attempt_load
+    from detect.detection import text_detection
+    from recognition.model import RecogModel
+    from TTS.tts import run_tts, make_ssml
+    from utils.util import sorting_bounding_box
+    from utils.general import *
+    from data.image_preprocessing import Load_Image
+    import glob
+    print('import done')
 
 
 
@@ -46,10 +78,9 @@ def run():
     for pdf in os.listdir(pdf_dir):
         if pdf =='.DS_Store':
             continue
-
         pages = convert_from_path(os.path.join(pdf_dir,pdf), dpi=600,
-                                #poppler_path=os.path.join(model_dir,'poppler-23.08.0/Library/bin')
-                                )
+                                  #poppler_path=model_dir+'/poppler-23.08.0/Library/bin'
+        )
         for j, page in enumerate(pages):
             page.save(f'{img_dir}/{os.path.basename(pdf)[:-4]}_page{j + 1:0>2d}.png')
 
@@ -61,6 +92,7 @@ def run():
     except:
         subprocess.run([sys.executable, '-m', 'pip', 'install', 'easydict'])
         detection_model = attempt_load(detection_weight,device)
+
 
     #recognition model setting
     recognition_weight= Path(model_dir +'/recognition/iter_150000_aihub_4000_pretrained.pth')
