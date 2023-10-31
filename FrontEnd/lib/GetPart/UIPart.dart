@@ -14,6 +14,7 @@ class UIPart extends GetxController {
   double maxHeight = 0.0;
   int pagenumber = 0;
   Uint8List filebytes = Uint8List(1);
+  String filename = '';
   String filepaths = '';
   String txtpaths = '';
   String mp3paths = '';
@@ -34,8 +35,6 @@ class UIPart extends GetxController {
   ];
   List<bool> drawerlist = [
     true,
-    false,
-    false,
   ];
   int activeindex = 0;
   int imgindex = 0;
@@ -237,6 +236,13 @@ class UIPart extends GetxController {
 
   void setpdffilebytes(Uint8List what) {
     filebytes = what;
+    setclickedpdf(true);
+    update();
+    notifyChildrens();
+  }
+
+  void setpdffilename(String what) {
+    filename = what;
     setclickedpdf(true);
     update();
     notifyChildrens();

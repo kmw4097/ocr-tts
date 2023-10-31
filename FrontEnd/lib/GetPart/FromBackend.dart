@@ -6,19 +6,41 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'package:get/get.dart';
 import 'package:audioplayers/audioplayers.dart';
+import 'package:http/http.dart';
 import '../Page/Insideview/homeview.dart';
 
 class FromBackend extends GetxController {
   final connect = GetConnect();
-  String status = '';
+  String status_pdf = '';
+  String status_mp3 = '';
   String res = '';
   String playing = 'stop';
   final player = AudioPlayer();
   Duration duration = Duration.zero;
   Duration position = Duration.zero;
+  int statuscode = 0;
+  String responsebody = '';
 
-  void setstatus(String what) {
-    status = what;
+  void setstatus(String what, String where) {
+    if (where == 'PDF') {
+      status_pdf = what;
+    } else {
+      status_mp3 = what;
+    }
+
+    update();
+    notifyChildrens();
+  }
+
+  void setcode(int what) {
+    statuscode = what;
+
+    update();
+    notifyChildrens();
+  }
+
+  void setbody(String what) {
+    responsebody = what;
 
     update();
     notifyChildrens();
@@ -29,70 +51,99 @@ class FromBackend extends GetxController {
   // 서버에 pdf를 포함한 다양한 경로의 파일을 저장
   Future tosendfile() async {
     // 아래의 경로는 백엔드 파트에 기입한 경로대로 수정하는걸로...
-    String starturl = GetPlatform.isWeb
-        ? 'http://localhost:8000/topdf'
-        : 'http://10.0.2.2:8000/topdf';
+    String starturl = GetPlatform.isWindows
+        ? 'http://localhost:8000/convert/ConvertFile'
+        : 'http://10.0.2.2:8000/convert/ConvertFile';
     var params = {
       //'originalpath': uiset.filebytes,
-      'originalpath': uiset.filepaths,
+      'filePath': uiset.filepaths,
     };
-    status = '';
-    Response response = await connect.request(starturl, 'get',
-        headers: <String, String>{
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'Access-Control-Allow-Headers': '*'
-        },
-        body: jsonEncode(params));
-    uiset.setloading(true, 0);
-    return response.body;
+    setstatus('', 'PDF');
+    var response = await post(
+      Uri.parse(starturl),
+      headers: <String, String>{
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'Access-Control-Allow-Headers': '*'
+      },
+      body: jsonEncode(params),
+    );
+    /*Response response = await connect.request(starturl, 'get',
+          headers: <String, String>{
+            'Accept': 'application/json',
+            'Access-Control-Allow-Headers': '*'
+          },
+          body: jsonEncode(params));*/
+    /*Response response = await connect.post(
+      starturl,
+      jsonEncode(params),
+      /*headers: <String, String>{
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'Access-Control-Allow-Headers': '*'
+      },*/
+    );*/
+    FetchFullfile();
   }
 
-  // Fetchfile
-  // 아래의 경로는 백엔드에서 결과값 경로로 지정한 경로로 수정...
-  // 서버에서 pdf 파일, txt, mp3의 저장된 경로를 딕셔너리상태로 불러옴
-  Stream Fetchfile() async* {
-    var filepath, filebyte, txtpath, mp3path;
-    String starturl = GetPlatform.isWeb
-        ? 'http://localhost:8000/topdf'
-        : 'http://10.0.2.2:8000/topdf';
-    Response response = await connect.get(starturl);
-    response = await connect.get(starturl);
-    if (response.statusCode == 200 || response.statusCode == 201) {
-      status = '';
-      filebyte = await loadfile2_1(response.body[0]);
-      txtpath = response.body[1];
-      mp3path = response.body[2];
+  void FetchFullfile() async {
+    var filepath, filebyte, txtpath, mp3path, fileinfo, qrstring;
+    Map<String, String> parameter = {"fileName": uiset.filename};
+
+    String starturl = GetPlatform.isWindows
+        ? 'http://localhost:8000/convert/GetPath'
+        : 'http://10.0.2.2:8000/convert/GetPath';
+    qrstring = Uri(queryParameters: parameter);
+    var queryUri = '$starturl$qrstring';
+    var response = await get(
+      Uri.parse(queryUri),
+    );
+    setcode(response.statusCode);
+    setbody(response.body);
+    if (statuscode == 200 || statuscode == 201) {
+      setstatus('', 'PDF');
+
+      fileinfo = jsonDecode(responsebody);
+      filebyte = fileinfo[0]['pdfFilePath'];
+      uiset.setpdffilepath(filebyte);
+    } else if (statuscode == 400 || statuscode == 450 || statuscode == 500) {
+      setstatus('Bad Request', 'PDF');
+      uiset.setprocesslist(0);
+    } else {
+      setstatus('Server Not Exists', 'PDF');
+      uiset.setprocesslist(0);
+    }
+  }
+
+  Future Fetchfile2() async {
+    var filebyte, mp3path, fileinfo, qrstring;
+
+    if (statuscode == 200 || statuscode == 201) {
+      fileinfo = jsonDecode(responsebody);
+      //filebyte = fileinfo[0]['pdfFilePath'];
+      filebyte = await loadfile2_1(uiset.filepaths);
+
+      //mp3path = fileinfo[0]['mp3FilePath'];
       uiset.setpdffilebytes(filebyte);
-      uiset.settxtfilepath(txtpath);
-      uiset.setmp3filepath(mp3path);
-
-      yield filebyte;
-    } else if (response.statusCode == 500) {
-      status = 'Bad Request';
+      setstatus('Go', 'PDF');
+      //uiset.setmp3filepath(mp3path);
+      uiset.setprocesslist(1);
+      return filebyte;
+    } else if (statuscode == 400 || statuscode == 450 || statuscode == 500) {
       uiset.setprocesslist(0);
-    } else if (response.statusCode == null) {
-      status = 'Server Not Exists';
+      return filebyte;
+    } else {
       uiset.setprocesslist(0);
+      return filebyte;
     }
-    uiset.setloading(false, 0);
-
-    update();
-    notifyChildrens();
-    yield null;
   }
 
-  Future<Uint8List?> loadfile2_1(String filePath) async {
-    try {
-      final file = File(filePath);
-      if (await file.exists()) {
-        Uint8List bytes = await file.readAsBytes();
-        return bytes;
-      }
-    } catch (e) {
-      print("Error loading file as bytes: $e");
-    }
-    return null;
+  loadfile2_1(String filePath) async {
+    Uint8List? bytes;
+    final file = File(filePath);
+    bytes = await file.readAsBytes();
+
+    return bytes;
   }
 
   // tosendpdf
@@ -108,7 +159,7 @@ class FromBackend extends GetxController {
 
   // Fetchtextorvoice
   // 서버에서 텍스트를 불러옴
-  Future Fetchtext() async {
+  /*Future Fetchtext() async {
     var filetxt;
     filetxt = await readTextFromFile(uiset.txtpaths);
     uiset.settxtfilecontent(filetxt);
@@ -131,16 +182,28 @@ class FromBackend extends GetxController {
     } catch (e) {
       return filePath;
     }
-  }
+  }*/
 
   Future setAudio() async {
-    var filemp3;
+    //var filemp3;
     uiset.setmp3filepath('');
-    filemp3 = await loadmp3File(uiset.mp3paths);
+    /*filemp3 = await loadmp3File(uiset.mp3paths);
     if (filemp3 == null) {
       setstatus('Bad Request');
+      setDuration(Duration.zero);
+      setPosition(Duration.zero);
     } else {
       isplaying('stop');
+      setDuration(Duration.zero);
+      setPosition(Duration.zero);
+      player.setReleaseMode(ReleaseMode.loop);
+      await player.setSourceDeviceFile(uiset.mp3paths);
+    }*/
+    isplaying('stop');
+    setDuration(Duration.zero);
+    setPosition(Duration.zero);
+    if (uiset.mp3paths == '') {
+    } else {
       player.setReleaseMode(ReleaseMode.loop);
       await player.setSourceDeviceFile(uiset.mp3paths);
     }
@@ -150,17 +213,17 @@ class FromBackend extends GetxController {
   // 서버에서 텍스트를 불러옴
   Future Fetchvoice() async {
     var filemp3;
-    uiset.setmp3filepath('C:/Users/chosungsu/Desktop/audio.mp3');
-    //
+
+    //uiset.setmp3filepath('C:/Users/chosungsu/Desktop/audio.mp3');
     filemp3 = await loadmp3File(uiset.mp3paths);
     if (filemp3 == null) {
-      setstatus('Bad Request');
+      setstatus('Bad Request', 'MP3');
     } else {
       isplaying('stop');
+      setstatus('Go', 'MP3');
       player.setReleaseMode(ReleaseMode.loop);
       await player.setSourceDeviceFile(uiset.mp3paths);
     }
-    uiset.setloading(false, 0);
     return filemp3;
   }
 

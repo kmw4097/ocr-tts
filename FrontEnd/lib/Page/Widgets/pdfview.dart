@@ -55,11 +55,11 @@ loadfile3() async {
   if (result != null) {
     uiset.setfilelen(result.files.length);
     if (uiset.filelen > 1) {
-      return null;
+      return [null, null];
     } else {
-      return result.files.first.path!;
+      return [result.files.first.name.split('.')[0], result.files.first.path!];
     }
   } else {
-    return null;
+    return [null, null];
   }
 }

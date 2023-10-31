@@ -81,7 +81,7 @@ view1(context, maxHeight, maxWidth, searchNode, pdfViewerController) {
     mainAxisAlignment: MainAxisAlignment.spaceBetween,
     children: [
       Flexible(
-        flex: 1,
+        flex: 2,
         child: PDFDashboard(
           context,
           maxHeight,
@@ -124,7 +124,8 @@ view1(context, maxHeight, maxWidth, searchNode, pdfViewerController) {
 // TTS를 실행해주는 목소리를 선택하거나 속도 조절하는 설정칸,
 // QA결과뷰
 Searchview(context, maxHeight, maxWidth, searchNode, section) {
-  var filesomething, filepath;
+  var filesomething, filepath, filename;
+  List files = [];
   return ContainerDesign(
       color: MyTheme.colorWhite,
       type: 0,
@@ -158,18 +159,28 @@ Searchview(context, maxHeight, maxWidth, searchNode, section) {
                                         label: '파일 변경을 원하시면 우측 x표시를 클릭해주세요!');
                                   } else {
                                     uiset.setclickedpdf(false);
-                                    fb.setstatus('');
+                                    fb.setstatus('', 'PDF');
+                                    fb.setstatus('', 'MP3');
                                     // 이 코드는 새로 변경된 부분으로
                                     // 서버로 보내기 전 기존 로컬 파일경로를 받아옴.
-                                    filepath = await loadfile3();
-                                    if (filepath != null) {
-                                      uiset.setpdffilepath(filepath);
+                                    try {
+                                      files = await loadfile3();
+                                    } catch (e) {
+                                      print(e);
+                                    }
+                                    //files = await loadfile3();
+                                    if (files[0] != null) {
+                                      uiset.setpdffilename(files[0]);
+                                      uiset.setpdffilepath(files[1]);
                                       uiset.setclickwhat(1);
                                       uiset.setprocesslist(0);
                                       // 이 부분부터는 현재는 pdf, xlsx, docs 등을 받아
                                       // 처리를 하고 있고 백엔드 서버로 filesomething값을
                                       // 보내어 다시 리턴(온전한 pdf값으로)받도록 하는 로직이 필요하다.
                                       fb.tosendfile();
+                                    } else {
+                                      uiset.setclickwhat(0);
+                                      uiset.setprocesslist(0);
                                     }
                                     /*if (GetPlatform.isMobile) {
                                       filesomething = await loadfile1();
@@ -220,8 +231,8 @@ Searchview(context, maxHeight, maxWidth, searchNode, section) {
                               InkWell(
                                 onTap: () {
                                   if (uiset.processlist[1] != true) {
-                                    if (fb.status == 'Bad Request' ||
-                                        fb.status == 'Server Not Exists') {
+                                    if (fb.status_pdf == 'Bad Request' ||
+                                        fb.status_pdf == 'Server Not Exists') {
                                       IconSnackBar.show(
                                           context: context,
                                           snackBarType: SnackBarType.fail,
@@ -268,11 +279,12 @@ Searchview(context, maxHeight, maxWidth, searchNode, section) {
                     flex: 1,
                     child: InkWell(
                         onTap: () {
-                          fb.setstatus('');
-                          uiset.setclickedpdf(false);
+                          uiset.setprocesslist(0);
                           uiset.filepaths = '';
                           uiset.filebytes = Uint8List(1);
-                          uiset.setprocesslist(0);
+                          fb.setstatus('', 'PDF');
+                          fb.setstatus('', 'MP3');
+                          uiset.setclickedpdf(false);
                           fb.setAudio();
                           fb.isplaying('stop');
                           fb.player.stop();
@@ -290,47 +302,7 @@ Searchview(context, maxHeight, maxWidth, searchNode, section) {
                 ],
               )
             ],
-          )
-          /*Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            InkWell(
-                onTap: () {
-                  if (uiset.speechToText.isNotListening) {
-                    uiset.startListening();
-                  } else {
-                    uiset.stopListening();
-                  }
-                },
-                child: CircleAvatar(
-                    maxRadius: 33,
-                    backgroundColor: MyTheme.colororigblue,
-                    child: CircleAvatar(
-                      maxRadius: 30,
-                      backgroundColor: MyTheme.colorWhite,
-                      child: Icon(
-                        MaterialIcons.mic,
-                        size: 50,
-                        color: MyTheme.colororigblue,
-                      ),
-                    ))),
-            const SizedBox(
-              height: 20,
-            ),
-            Text(
-              '검색어 예시\n서울시 노원구청 홈페이지',
-              maxLines: 2,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                  color: MyTheme.colorgrey,
-                  fontWeight: FontWeight.bold,
-                  fontSize: contentTextsize()),
-              overflow: TextOverflow.ellipsis,
-            )
-          ],
-        )*/
-          ));
+          )));
 }
 
 PDFDashboard(
@@ -401,106 +373,151 @@ PDFDashboard(
                           ? (GetPlatform.isWeb ||
                                   GetPlatform.isWindows ||
                                   GetPlatform.isMacOS
-                              ? GetBuilder<FromBackend>(builder: (_) {
-                                  return StreamBuilder(
-                                    stream: fb.Fetchfile(),
-                                    builder: (context, snapshot) {
-                                      if (snapshot.data != null) {
-                                        uiset.setprocesslist(1);
-                                        return SfPdfViewer.memory(
-                                          uiset.filebytes,
-                                          controller: pdfViewerController,
+                              //? uiset.filebytes != Uint8List(1)
+                              ? FutureBuilder(
+                                  future: fb.Fetchfile2(),
+                                  builder: (context, snapshot) {
+                                    return GetBuilder<FromBackend>(
+                                        builder: (_) {
+                                      if (fb.status_pdf == 'Go') {
+                                        return snapshot.hasData
+                                            ? (snapshot.data is Uint8List
+                                                ? SfPdfViewer.memory(
+                                                    snapshot.data as Uint8List,
+                                                    controller:
+                                                        pdfViewerController,
+                                                  )
+                                                : Column(
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment
+                                                            .center,
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .center,
+                                                    children: [
+                                                      Text(
+                                                        '데이터가 전달되지 않았습니다.',
+                                                        maxLines: 2,
+                                                        textAlign:
+                                                            TextAlign.center,
+                                                        style: TextStyle(
+                                                            color: MyTheme
+                                                                .colorgrey,
+                                                            fontWeight:
+                                                                FontWeight.bold,
+                                                            fontSize:
+                                                                contentTextsize()),
+                                                        overflow: TextOverflow
+                                                            .ellipsis,
+                                                      )
+                                                    ],
+                                                  ))
+                                            : SizedBox(
+                                                child: Column(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment.center,
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.center,
+                                                  children: [
+                                                    CircularProgressIndicator(
+                                                      color:
+                                                          MyTheme.colororigblue,
+                                                    ),
+                                                    const SizedBox(
+                                                      height: 15,
+                                                    ),
+                                                    Text(
+                                                      '서버로부터 불러오는 중입니다. 잠시만 기다려주십시오.',
+                                                      textAlign:
+                                                          TextAlign.center,
+                                                      style: TextStyle(
+                                                          wordSpacing: 2,
+                                                          letterSpacing: 2,
+                                                          fontWeight:
+                                                              FontWeight.normal,
+                                                          fontSize:
+                                                              contentsmallTextsize(),
+                                                          color: MyTheme
+                                                              .colorgreyshade),
+                                                    ),
+                                                  ],
+                                                ),
+                                              );
+                                      } else if (snapshot.data == null) {
+                                        return Column(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.center,
+                                          children: [
+                                            Text(
+                                              '데이터가 전달되지 않았습니다.',
+                                              maxLines: 2,
+                                              textAlign: TextAlign.center,
+                                              style: TextStyle(
+                                                  color: MyTheme.colorgrey,
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: contentTextsize()),
+                                              overflow: TextOverflow.ellipsis,
+                                            )
+                                          ],
                                         );
                                       } else {
-                                        if (fb.status == 'Bad Request' ||
-                                            fb.status == 'Server Not Exists') {
-                                          return SizedBox(
-                                            child: Column(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment.center,
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.center,
-                                              children: [
-                                                const Icon(
-                                                  AntDesign.frowno,
-                                                  color: Colors.red,
-                                                  size: 30,
-                                                ),
-                                                const SizedBox(
-                                                  height: 15,
-                                                ),
-                                                Text(
-                                                  fb.status,
-                                                  textAlign: TextAlign.center,
-                                                  style: TextStyle(
-                                                      wordSpacing: 2,
-                                                      letterSpacing: 2,
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                      fontSize:
-                                                          contentTextsize(),
-                                                      color:
-                                                          MyTheme.colororigred),
-                                                ),
-                                                const SizedBox(
-                                                  height: 15,
-                                                ),
-                                                Text(
-                                                  'x버튼을 클릭하여 재시도해주세요',
-                                                  textAlign: TextAlign.center,
-                                                  style: TextStyle(
-                                                      wordSpacing: 2,
-                                                      letterSpacing: 2,
-                                                      fontWeight:
-                                                          FontWeight.normal,
-                                                      fontSize:
-                                                          contentsmallTextsize(),
-                                                      color: MyTheme
-                                                          .colorgreyshade),
-                                                ),
-                                              ],
-                                            ),
-                                          );
-                                        } else {
-                                          return SizedBox(
-                                            child: Column(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment.center,
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.center,
-                                              children: [
-                                                CircularProgressIndicator(
-                                                  color: MyTheme.colororigblue,
-                                                ),
-                                                const SizedBox(
-                                                  height: 15,
-                                                ),
-                                                Text(
-                                                  '서버로부터 불러오는 중입니다. 잠시만 기다려주십시오.',
-                                                  textAlign: TextAlign.center,
-                                                  style: TextStyle(
-                                                      wordSpacing: 2,
-                                                      letterSpacing: 2,
-                                                      fontWeight:
-                                                          FontWeight.normal,
-                                                      fontSize:
-                                                          contentsmallTextsize(),
-                                                      color: MyTheme
-                                                          .colorgreyshade),
-                                                ),
-                                              ],
-                                            ),
-                                          );
-                                        }
+                                        return SizedBox(
+                                          child: Column(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.center,
+                                            children: [
+                                              CircularProgressIndicator(
+                                                color: MyTheme.colororigblue,
+                                              ),
+                                              const SizedBox(
+                                                height: 15,
+                                              ),
+                                              Text(
+                                                '서버로부터 불러오는 중입니다. 잠시만 기다려주십시오.',
+                                                textAlign: TextAlign.center,
+                                                style: TextStyle(
+                                                    wordSpacing: 2,
+                                                    letterSpacing: 2,
+                                                    fontWeight:
+                                                        FontWeight.normal,
+                                                    fontSize:
+                                                        contentsmallTextsize(),
+                                                    color:
+                                                        MyTheme.colorgreyshade),
+                                              ),
+                                            ],
+                                          ),
+                                        );
                                       }
-                                    },
-                                  );
-                                })
+                                    });
+                                  },
+                                )
                               : SfPdfViewer.file(
                                   File(uiset.filepaths),
                                   controller: pdfViewerController,
                                 ))
-                          : const SizedBox())
+                          : Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                Text(
+                                  section == 0
+                                      ? '상단의 업로드 버튼으로\n파일 업로드 해주세요'
+                                      : '우측의 업로드 버튼으로\n파일 업로드 해주세요',
+                                  maxLines: 2,
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                      color: MyTheme.colorgrey,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: contentTextsize()),
+                                  overflow: TextOverflow.ellipsis,
+                                )
+                              ],
+                            ))
                   : Flexible(
                       fit: FlexFit.tight,
                       child: GetBuilder<UIPart>(
@@ -544,7 +561,7 @@ Settingview(context, maxHeight, maxWidth, searchNode, section) {
               return Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  InkWell(
+                  /*InkWell(
                     onTap: () {
                       uiset.setdrawerlist(0);
                     },
@@ -562,10 +579,10 @@ Settingview(context, maxHeight, maxWidth, searchNode, section) {
                               : MyTheme.colorgrey),
                       overflow: TextOverflow.ellipsis,
                     ),
-                  ),
+                  ),*/
                   InkWell(
                     onTap: () {
-                      uiset.setdrawerlist(1);
+                      uiset.setdrawerlist(0);
                     },
                     child: Text(
                       'To-Voice',
@@ -576,7 +593,7 @@ Settingview(context, maxHeight, maxWidth, searchNode, section) {
                           letterSpacing: 2,
                           fontWeight: FontWeight.bold,
                           fontSize: contentTextsize(),
-                          color: uiset.drawerlist[1] == true
+                          color: uiset.drawerlist[0] == true
                               ? MyTheme.colorblack
                               : MyTheme.colorgrey),
                       overflow: TextOverflow.ellipsis,
@@ -608,8 +625,7 @@ Settingview(context, maxHeight, maxWidth, searchNode, section) {
 Viewdrawerbox(section) {
   // 각 sizedbox는 스크롤이 되도록 수정해야 함
   // audio를 재생하는 UI와 로직을 재정비해야 함.
-  return section == 0
-      ? SizedBox(child: GetBuilder<FromBackend>(builder: (_) {
+  /*SizedBox(child: GetBuilder<FromBackend>(builder: (_) {
           return FutureBuilder(
             future: fb.Fetchtext(),
             builder: (context, snapshot) {
@@ -696,61 +712,61 @@ Viewdrawerbox(section) {
               }
             },
           );
-        }))
-      : SizedBox(
-          child: GetBuilder<FromBackend>(builder: (_) {
-            return FutureBuilder(
-              future: fb.Fetchvoice(),
-              builder: (context, snapshot) {
-                if (snapshot.hasData || uiset.mp3paths != '') {
-                  return SizedBox(
-                      child: Column(
+        }))*/
+  return SizedBox(
+    child: GetBuilder<FromBackend>(builder: (_) {
+      return FutureBuilder(
+        future: fb.Fetchvoice(),
+        builder: (context, snapshot) {
+          if (snapshot.hasData || fb.status_mp3 == 'Go') {
+            return SizedBox(
+                child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Slider(
+                    min: 0,
+                    max: fb.duration.inSeconds.toDouble(),
+                    value: fb.position.inSeconds.toDouble(),
+                    onChanged: (value) async {
+                      final position = Duration(seconds: value.toInt());
+                      await fb.player.seek(position);
+                    }),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        formatTime(fb.position),
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                            wordSpacing: 2,
+                            letterSpacing: 2,
+                            fontWeight: FontWeight.bold,
+                            fontSize: contentTextsize(),
+                            color: MyTheme.colorblack),
+                      ),
+                      Text(
+                        formatTime(fb.duration),
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                            wordSpacing: 2,
+                            letterSpacing: 2,
+                            fontWeight: FontWeight.bold,
+                            fontSize: contentTextsize(),
+                            color: MyTheme.colorblack),
+                      ),
+                    ],
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      Slider(
-                          min: 0,
-                          max: fb.duration.inSeconds.toDouble(),
-                          value: fb.position.inSeconds.toDouble(),
-                          onChanged: (value) async {
-                            final position = Duration(seconds: value.toInt());
-                            await fb.player.seek(position);
-                          }),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              formatTime(fb.position),
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                  wordSpacing: 2,
-                                  letterSpacing: 2,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: contentTextsize(),
-                                  color: MyTheme.colorblack),
-                            ),
-                            Text(
-                              formatTime(fb.duration),
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                  wordSpacing: 2,
-                                  letterSpacing: 2,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: contentTextsize(),
-                                  color: MyTheme.colorblack),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            /*InkWell(
+                      /*InkWell(
                               onTap: () {
                                 IconSnackBar.show(
                                     context: context,
@@ -766,72 +782,68 @@ Viewdrawerbox(section) {
                             const SizedBox(
                               width: 10,
                             ),*/
-                            fb.playing == 'play' ||
-                                    fb.playing == 'pause' ||
-                                    fb.playing == 'resume'
-                                ? Row(
-                                    children: [
-                                      InkWell(
-                                        onTap: () async {
-                                          fb.isplaying('stop');
-                                          await fb.player.stop();
-                                        },
-                                        child: GetBuilder<FromBackend>(
-                                            builder: (_) {
-                                          return Icon(
-                                            Ionicons.stop,
-                                            color: MyTheme.colororigred,
-                                            size: largeiconsize(),
-                                          );
-                                        }),
-                                      ),
-                                      const SizedBox(
-                                        width: 10,
-                                      ),
-                                      InkWell(
-                                        onTap: () async {
-                                          if (fb.playing == 'pause') {
-                                            fb.isplaying('resume');
-                                            await fb.player.resume();
-                                          } else {
-                                            fb.isplaying('pause');
-                                            await fb.player.pause();
-                                          }
-                                        },
-                                        child: GetBuilder<FromBackend>(
-                                            builder: (_) {
-                                          return Icon(
-                                            fb.playing == 'pause'
-                                                ? AntDesign.play
-                                                : AntDesign.pausecircle,
-                                            color: MyTheme.colororigblue,
-                                            size: largeiconsize(),
-                                          );
-                                        }),
-                                      ),
-                                    ],
-                                  )
-                                : InkWell(
-                                    onTap: () async {
-                                      fb.isplaying('play');
-                                      await fb.player
-                                          .play(UrlSource(uiset.mp3paths));
+                      fb.playing == 'play' ||
+                              fb.playing == 'pause' ||
+                              fb.playing == 'resume'
+                          ? Row(
+                              children: [
+                                InkWell(
+                                  onTap: () async {
+                                    fb.isplaying('stop');
+                                    await fb.player.stop();
+                                  },
+                                  child: GetBuilder<FromBackend>(builder: (_) {
+                                    return Icon(
+                                      Ionicons.stop,
+                                      color: MyTheme.colororigred,
+                                      size: largeiconsize(),
+                                    );
+                                  }),
+                                ),
+                                const SizedBox(
+                                  width: 10,
+                                ),
+                                InkWell(
+                                  onTap: () async {
+                                    if (fb.playing == 'pause') {
+                                      fb.isplaying('resume');
+                                      await fb.player.resume();
+                                    } else {
+                                      fb.isplaying('pause');
+                                      await fb.player.pause();
+                                    }
+                                  },
+                                  child: GetBuilder<FromBackend>(builder: (_) {
+                                    return Icon(
+                                      fb.playing == 'pause'
+                                          ? AntDesign.play
+                                          : AntDesign.pausecircle,
+                                      color: MyTheme.colororigblue,
+                                      size: largeiconsize(),
+                                    );
+                                  }),
+                                ),
+                              ],
+                            )
+                          : InkWell(
+                              onTap: () async {
+                                fb.isplaying('play');
+                                await fb.player.play(UrlSource(uiset.mp3paths));
 
-                                      /*IconSnackBar.show(
+                                /*IconSnackBar.show(
                                 context: context,
                                 snackBarType: SnackBarType.fail,
                                 label: '상단의 변환과정을 먼저 수행하셔야 합니다.');*/
-                                    },
-                                    child:
-                                        GetBuilder<FromBackend>(builder: (_) {
-                                      return Icon(
-                                        AntDesign.play,
-                                        color: MyTheme.colororigblue,
-                                        size: largeiconsize(),
-                                      );
-                                    }),
-                                  ),
-                            /*const SizedBox(
+                              },
+                              child: GetBuilder<FromBackend>(builder: (_) {
+                                return Icon(
+                                  AntDesign.play,
+                                  color: MyTheme.colororigblue,
+                                  size: largeiconsize(),
+                                );
+                              }),
+                            ),
+                      /*const SizedBox(
                               width: 10,
                             ),
                             InkWell(
@@ -847,89 +859,89 @@ Viewdrawerbox(section) {
                                 size: iconsize(),
                               ),
                             ),*/
-                          ],
-                        ),
-                      )
                     ],
-                  ));
-                } else {
-                  if (fb.status == 'Bad Request' ||
-                      fb.status == 'Server Not Exists') {
-                    return SizedBox(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          const Icon(
-                            AntDesign.frowno,
-                            color: Colors.red,
-                            size: 30,
-                          ),
-                          const SizedBox(
-                            height: 15,
-                          ),
-                          Text(
-                            fb.status,
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                                wordSpacing: 2,
-                                letterSpacing: 2,
-                                fontWeight: FontWeight.bold,
-                                fontSize: contentTextsize(),
-                                color: MyTheme.colororigred),
-                          ),
-                          const SizedBox(
-                            height: 15,
-                          ),
-                          Text(
-                            'x버튼을 클릭하여 재시도해주세요',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                                wordSpacing: 2,
-                                letterSpacing: 2,
-                                fontWeight: FontWeight.normal,
-                                fontSize: contentsmallTextsize(),
-                                color: MyTheme.colorgreyshade),
-                          ),
-                        ],
-                      ),
-                    );
-                  } else {
-                    return SizedBox(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          CircularProgressIndicator(
-                            color: MyTheme.colororigblue,
-                          ),
-                          const SizedBox(
-                            height: 15,
-                          ),
-                          Text(
-                            '서버로부터 불러오는 중입니다. 잠시만 기다려주십시오.',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                                wordSpacing: 2,
-                                letterSpacing: 2,
-                                fontWeight: FontWeight.normal,
-                                fontSize: contentsmallTextsize(),
-                                color: MyTheme.colorgreyshade),
-                          ),
-                        ],
-                      ),
-                    );
-                  }
-                }
-              },
-            );
-          }),
-        );
+                  ),
+                )
+              ],
+            ));
+          } else {
+            if (fb.status_mp3 == 'Bad Request' ||
+                fb.status_mp3 == 'Server Not Exists') {
+              return SizedBox(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    const Icon(
+                      AntDesign.frowno,
+                      color: Colors.red,
+                      size: 30,
+                    ),
+                    const SizedBox(
+                      height: 15,
+                    ),
+                    Text(
+                      fb.status_mp3,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                          wordSpacing: 2,
+                          letterSpacing: 2,
+                          fontWeight: FontWeight.bold,
+                          fontSize: contentTextsize(),
+                          color: MyTheme.colororigred),
+                    ),
+                    const SizedBox(
+                      height: 15,
+                    ),
+                    Text(
+                      'x버튼을 클릭하여 재시도해주세요',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                          wordSpacing: 2,
+                          letterSpacing: 2,
+                          fontWeight: FontWeight.normal,
+                          fontSize: contentsmallTextsize(),
+                          color: MyTheme.colorgreyshade),
+                    ),
+                  ],
+                ),
+              );
+            } else {
+              return SizedBox(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    CircularProgressIndicator(
+                      color: MyTheme.colororigblue,
+                    ),
+                    const SizedBox(
+                      height: 15,
+                    ),
+                    Text(
+                      '서버로부터 불러오는 중입니다. 잠시만 기다려주십시오.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                          wordSpacing: 2,
+                          letterSpacing: 2,
+                          fontWeight: FontWeight.normal,
+                          fontSize: contentsmallTextsize(),
+                          color: MyTheme.colorgreyshade),
+                    ),
+                  ],
+                ),
+              );
+            }
+          }
+        },
+      );
+    }),
+  );
 }
 
 NoneViewBox(context, section) {
-  return section == 0
-      ? Column(
+  /**
+   * Column(
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
@@ -945,73 +957,74 @@ NoneViewBox(context, section) {
             )
           ],
         )
-      : SizedBox(
-          child: Column(
+   */
+  return SizedBox(
+      child: Column(
+    mainAxisAlignment: MainAxisAlignment.center,
+    crossAxisAlignment: CrossAxisAlignment.center,
+    children: [
+      Slider(
+          min: 0,
+          max: 1,
+          value: fb.position.inSeconds.toDouble(),
+          onChanged: (value) async {
+            //final position = Duration(seconds: value.toInt());
+            //await fb.player.seek(position);
+          }),
+      Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              formatTime(fb.position),
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                  wordSpacing: 2,
+                  letterSpacing: 2,
+                  fontWeight: FontWeight.bold,
+                  fontSize: contentTextsize(),
+                  color: MyTheme.colorblack),
+            ),
+            Text(
+              formatTime(fb.duration),
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                  wordSpacing: 2,
+                  letterSpacing: 2,
+                  fontWeight: FontWeight.bold,
+                  fontSize: contentTextsize(),
+                  color: MyTheme.colorblack),
+            ),
+          ],
+        ),
+      ),
+      Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Slider(
-                min: 0,
-                max: 0,
-                value: fb.position.inSeconds.toDouble(),
-                onChanged: (value) async {
-                  //final position = Duration(seconds: value.toInt());
-                  //await fb.player.seek(position);
-                }),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    formatTime(fb.position),
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                        wordSpacing: 2,
-                        letterSpacing: 2,
-                        fontWeight: FontWeight.bold,
-                        fontSize: contentTextsize(),
-                        color: MyTheme.colorblack),
-                  ),
-                  Text(
-                    formatTime(fb.duration),
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                        wordSpacing: 2,
-                        letterSpacing: 2,
-                        fontWeight: FontWeight.bold,
-                        fontSize: contentTextsize(),
-                        color: MyTheme.colorblack),
-                  ),
-                ],
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  InkWell(
-                    onTap: () async {
-                      IconSnackBar.show(
-                          context: context,
-                          snackBarType: SnackBarType.fail,
-                          label: '상단의 변환과정을 먼저 수행하셔야 합니다.');
-                    },
-                    child: GetBuilder<FromBackend>(builder: (_) {
-                      return Icon(
-                        AntDesign.play,
-                        color: MyTheme.colororigblue,
-                        size: largeiconsize(),
-                      );
-                    }),
-                  ),
-                ],
-              ),
+            InkWell(
+              onTap: () async {
+                IconSnackBar.show(
+                    context: context,
+                    snackBarType: SnackBarType.fail,
+                    label: '상단의 변환과정을 먼저 수행하셔야 합니다.');
+              },
+              child: GetBuilder<FromBackend>(builder: (_) {
+                return Icon(
+                  AntDesign.play,
+                  color: MyTheme.colororigblue,
+                  size: largeiconsize(),
+                );
+              }),
             ),
           ],
-        ));
+        ),
+      ),
+    ],
+  ));
 }
 
 formatTime(Duration durationone) {
