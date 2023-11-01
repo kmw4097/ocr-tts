@@ -12,6 +12,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_icon_snackbar/flutter_icon_snackbar.dart';
 import 'package:flutter_vector_icons/flutter_vector_icons.dart';
 import 'package:get/get.dart';
+import 'package:simple_circular_progress_bar/simple_circular_progress_bar.dart';
 import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
 
 import 'pdfview.dart';
@@ -129,60 +130,61 @@ Searchview(context, maxHeight, maxWidth, searchNode, section) {
   return ContainerDesign(
       color: MyTheme.colorWhite,
       type: 0,
-      child: SizedBox(
-          height: section == 0 ? 100 : 150,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              //Divider(height: 30, thickness: 2, color: uiset.backgroundcolor),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  Flexible(
-                      flex: 2,
-                      child: SizedBox(
-                        child: ContainerDesign(
-                          color: uiset.isstart
-                              ? MyTheme.colororigred
-                              : MyTheme.colororigblue,
-                          type: 0,
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                            children: [
-                              InkWell(
-                                onTap: () async {
-                                  if (uiset.processlist[0] != true) {
-                                    IconSnackBar.show(
-                                        context: context,
-                                        snackBarType: SnackBarType.fail,
-                                        label: '파일 변경을 원하시면 우측 x표시를 클릭해주세요!');
-                                  } else {
-                                    uiset.setclickedpdf(false);
-                                    fb.setstatus('', 'PDF');
-                                    fb.setstatus('', 'MP3');
-                                    // 이 코드는 새로 변경된 부분으로
-                                    // 서버로 보내기 전 기존 로컬 파일경로를 받아옴.
-                                    try {
-                                      files = await loadfile3();
-                                    } catch (e) {
-                                      print(e);
-                                    }
-                                    //files = await loadfile3();
-                                    if (files[0] != null) {
-                                      uiset.setpdffilename(files[0]);
-                                      uiset.setpdffilepath(files[1]);
-                                      uiset.setclickwhat(1);
-                                      uiset.setprocesslist(0);
-                                      // 이 부분부터는 현재는 pdf, xlsx, docs 등을 받아
-                                      // 처리를 하고 있고 백엔드 서버로 filesomething값을
-                                      // 보내어 다시 리턴(온전한 pdf값으로)받도록 하는 로직이 필요하다.
-                                      fb.tosendfile();
+      child: GetBuilder<UIPart>(builder: (_) {
+        return SizedBox(
+            height: section == 0 ? 100 : 150,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                //Divider(height: 30, thickness: 2, color: uiset.backgroundcolor),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    Flexible(
+                        flex: 2,
+                        child: SizedBox(
+                          child: ContainerDesign(
+                            color: uiset.isstart
+                                ? MyTheme.colororigred
+                                : MyTheme.colororigblue,
+                            type: 0,
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                              children: [
+                                InkWell(
+                                  onTap: () async {
+                                    if (uiset.processlist[0] != true) {
+                                      IconSnackBar.show(
+                                          context: context,
+                                          snackBarType: SnackBarType.fail,
+                                          label: '파일 변경을 원하시면 우측 x표시를 클릭해주세요!');
                                     } else {
-                                      uiset.setclickwhat(0);
-                                      uiset.setprocesslist(0);
-                                    }
-                                    /*if (GetPlatform.isMobile) {
+                                      uiset.setclickedpdf(false);
+                                      fb.setstatus('', 'PDF');
+                                      fb.setstatus('', 'MP3');
+                                      // 이 코드는 새로 변경된 부분으로
+                                      // 서버로 보내기 전 기존 로컬 파일경로를 받아옴.
+                                      try {
+                                        files = await loadfile3();
+                                      } catch (e) {
+                                        print(e);
+                                      }
+                                      //files = await loadfile3();
+                                      if (files[0] != null) {
+                                        uiset.setpdffilename(files[0]);
+                                        uiset.setpdffilepath(files[1], 0);
+                                        uiset.setclickwhat(1);
+                                        uiset.setprocesslist(0);
+                                        // 이 부분부터는 현재는 pdf, xlsx, docs 등을 받아
+                                        // 처리를 하고 있고 백엔드 서버로 filesomething값을
+                                        // 보내어 다시 리턴(온전한 pdf값으로)받도록 하는 로직이 필요하다.
+                                        fb.tosendfile();
+                                      } else {
+                                        uiset.setclickwhat(0);
+                                        uiset.setprocesslist(0);
+                                      }
+                                      /*if (GetPlatform.isMobile) {
                                       filesomething = await loadfile1();
                                     } else {
                                       filesomething = await loadfile2();
@@ -200,9 +202,9 @@ Searchview(context, maxHeight, maxWidth, searchNode, section) {
                                       // 보내어 다시 리턴(온전한 pdf값으로)받도록 하는 로직이 필요하다.
                                       fb.tosendfile();
                                     }*/
-                                  }
+                                    }
 
-                                  /*AddContent(
+                                    /*AddContent(
                           context,
                           Text(
                             '업로드',
@@ -217,92 +219,98 @@ Searchview(context, maxHeight, maxWidth, searchNode, section) {
                             overflow: TextOverflow.ellipsis,
                           ),
                           searchNode);*/
-                                },
-                                child: SizedBox(
-                                  child: Icon(
-                                    AntDesign.upload,
-                                    size: 25,
-                                    color: uiset.processlist[0] == true
-                                        ? MyTheme.colorWhite
-                                        : MyTheme.colorgreyshade,
+                                  },
+                                  child: SizedBox(
+                                    child: Icon(
+                                      AntDesign.upload,
+                                      size: 25,
+                                      color: uiset.processlist[0] == true
+                                          ? MyTheme.colorWhite
+                                          : MyTheme.colorgreyshade,
+                                    ),
                                   ),
                                 ),
-                              ),
-                              InkWell(
-                                onTap: () {
-                                  if (uiset.processlist[1] != true) {
-                                    if (fb.status_pdf == 'Bad Request' ||
-                                        fb.status_pdf == 'Server Not Exists') {
+                                InkWell(
+                                  onTap: () {
+                                    if (uiset.processlist[1] != true) {
+                                      if (fb.status_pdf == 'Bad Request' ||
+                                          fb.status_pdf ==
+                                              'Server Not Exists') {
+                                        IconSnackBar.show(
+                                            context: context,
+                                            snackBarType: SnackBarType.fail,
+                                            label:
+                                                '예기치 못한 에러로 인해 사용불가상태입니다! 다시 시도해주세요');
+                                      } else {
+                                        IconSnackBar.show(
+                                            context: context,
+                                            snackBarType: SnackBarType.fail,
+                                            label:
+                                                '먼저 파일을 업로드하셔야 사용가능상태로 전환됩니다!');
+                                      }
+                                      uiset.setstart(false);
+                                    } else if (uiset.mp3paths == '') {
                                       IconSnackBar.show(
                                           context: context,
                                           snackBarType: SnackBarType.fail,
                                           label:
-                                              '예기치 못한 에러로 인해 사용불가상태입니다! 다시 시도해주세요');
+                                              '음성변환 중 예기치 못한 에러로 인해 사용불가상태입니다! 다시 시도해주세요');
                                     } else {
-                                      IconSnackBar.show(
-                                          context: context,
-                                          snackBarType: SnackBarType.fail,
-                                          label:
-                                              '먼저 파일을 업로드하셔야 사용가능상태로 전환됩니다!');
+                                      uiset.setstart(!uiset.isstart);
+                                      fb.setAudio('start');
+                                      fb.isplaying('stop');
+                                      fb.player.stop();
                                     }
-                                    uiset.setstart(false);
-                                  } else {
-                                    uiset.setstart(!uiset.isstart);
-                                    uiset.settxtfilecontent('');
-                                    fb.setAudio();
-                                    fb.isplaying('stop');
-                                    fb.player.stop();
-                                    fb.tosendfiles();
-                                  }
-                                },
-                                child: Text(
-                                  uiset.isstart ? '변환중지' : '변환시작',
-                                  maxLines: 1,
-                                  textAlign: TextAlign.start,
-                                  style: TextStyle(
-                                    wordSpacing: 2,
-                                    letterSpacing: 2,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: contentTextsize(),
-                                    color: uiset.processlist[1] == true
-                                        ? MyTheme.colorWhite
-                                        : MyTheme.colorgreyshade,
+                                  },
+                                  child: Text(
+                                    uiset.isstart ? '변환중지' : '변환시작',
+                                    maxLines: 1,
+                                    textAlign: TextAlign.start,
+                                    style: TextStyle(
+                                      wordSpacing: 2,
+                                      letterSpacing: 2,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: contentTextsize(),
+                                      color: uiset.processlist[1] == true
+                                          ? MyTheme.colorWhite
+                                          : MyTheme.colorgreyshade,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
                                   ),
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              )
-                            ],
-                          ),
-                        ),
-                      )),
-                  Flexible(
-                    flex: 1,
-                    child: InkWell(
-                        onTap: () {
-                          uiset.setprocesslist(0);
-                          uiset.filepaths = '';
-                          uiset.filebytes = Uint8List(1);
-                          fb.setstatus('', 'PDF');
-                          fb.setstatus('', 'MP3');
-                          uiset.setclickedpdf(false);
-                          fb.setAudio();
-                          fb.isplaying('stop');
-                          fb.player.stop();
-                          uiset.setstart(false);
-                          //uiset.filebytes = '';
-                        },
-                        child: SizedBox(
-                          child: Icon(
-                            MaterialIcons.clear,
-                            size: iconsize(),
-                            color: MyTheme.colorblack,
+                                )
+                              ],
+                            ),
                           ),
                         )),
-                  )
-                ],
-              )
-            ],
-          )));
+                    Flexible(
+                      flex: 1,
+                      child: InkWell(
+                          onTap: () {
+                            uiset.setprocesslist(0);
+                            uiset.filepaths = '';
+                            uiset.filebytes = Uint8List(1);
+                            fb.setstatus('', 'PDF');
+                            fb.setstatus('', 'MP3');
+                            uiset.setclickedpdf(false);
+                            fb.setAudio('reset');
+                            fb.isplaying('stop');
+                            fb.player.stop();
+                            uiset.setstart(false);
+                            //uiset.filebytes = '';
+                          },
+                          child: SizedBox(
+                            child: Icon(
+                              MaterialIcons.clear,
+                              size: iconsize(),
+                              color: MyTheme.colorblack,
+                            ),
+                          )),
+                    )
+                  ],
+                )
+              ],
+            ));
+      }));
 }
 
 PDFDashboard(
@@ -375,91 +383,92 @@ PDFDashboard(
                                   GetPlatform.isMacOS
                               //? uiset.filebytes != Uint8List(1)
                               ? FutureBuilder(
-                                  future: fb.Fetchfile2(),
+                                  future: fb.FetchPDFPath(),
                                   builder: (context, snapshot) {
                                     return GetBuilder<FromBackend>(
                                         builder: (_) {
-                                      if (fb.status_pdf == 'Go') {
-                                        return snapshot.hasData
-                                            ? (snapshot.data is Uint8List
-                                                ? SfPdfViewer.memory(
-                                                    snapshot.data as Uint8List,
-                                                    controller:
-                                                        pdfViewerController,
-                                                  )
-                                                : Column(
-                                                    mainAxisAlignment:
-                                                        MainAxisAlignment
-                                                            .center,
-                                                    crossAxisAlignment:
-                                                        CrossAxisAlignment
-                                                            .center,
-                                                    children: [
-                                                      Text(
-                                                        '데이터가 전달되지 않았습니다.',
-                                                        maxLines: 2,
-                                                        textAlign:
-                                                            TextAlign.center,
-                                                        style: TextStyle(
-                                                            color: MyTheme
-                                                                .colorgrey,
-                                                            fontWeight:
-                                                                FontWeight.bold,
-                                                            fontSize:
-                                                                contentTextsize()),
-                                                        overflow: TextOverflow
-                                                            .ellipsis,
-                                                      )
-                                                    ],
-                                                  ))
-                                            : SizedBox(
-                                                child: Column(
-                                                  mainAxisAlignment:
-                                                      MainAxisAlignment.center,
-                                                  crossAxisAlignment:
-                                                      CrossAxisAlignment.center,
-                                                  children: [
-                                                    CircularProgressIndicator(
-                                                      color:
-                                                          MyTheme.colororigblue,
-                                                    ),
-                                                    const SizedBox(
-                                                      height: 15,
-                                                    ),
-                                                    Text(
-                                                      '서버로부터 불러오는 중입니다. 잠시만 기다려주십시오.',
-                                                      textAlign:
-                                                          TextAlign.center,
-                                                      style: TextStyle(
-                                                          wordSpacing: 2,
-                                                          letterSpacing: 2,
-                                                          fontWeight:
-                                                              FontWeight.normal,
-                                                          fontSize:
-                                                              contentsmallTextsize(),
-                                                          color: MyTheme
-                                                              .colorgreyshade),
-                                                    ),
-                                                  ],
-                                                ),
+                                      if (fb.status_pdf == '') {
+                                        return fb.checkIfPDF(uiset.filepaths) !=
+                                                    false &&
+                                                uiset.filepaths != ''
+                                            ? SfPdfViewer.file(
+                                                File(uiset.filepaths),
+                                                controller: pdfViewerController,
+                                                interactionMode:
+                                                    PdfInteractionMode.pan)
+                                            : Column(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.center,
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.center,
+                                                children: [
+                                                  Text(
+                                                    '서버로부터 불러오는 중입니다. 잠시만 기다려주십시오.',
+                                                    textAlign: TextAlign.center,
+                                                    style: TextStyle(
+                                                        wordSpacing: 2,
+                                                        letterSpacing: 2,
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                        fontSize:
+                                                            contentTextsize(),
+                                                        color: MyTheme
+                                                            .colorgreyshade),
+                                                  ),
+                                                  const SizedBox(
+                                                    height: 15,
+                                                  ),
+                                                  SimpleCircularProgressBar(
+                                                    mergeMode: true,
+                                                    backColor:
+                                                        MyTheme.colorgreyshade,
+                                                    fullProgressColor:
+                                                        MyTheme.colororiggreen,
+                                                    animationDuration: 100,
+                                                  ),
+                                                ],
                                               );
-                                      } else if (snapshot.data == null) {
+                                      } else if (snapshot.data == null &&
+                                          uiset.filepaths == '') {
                                         return Column(
                                           mainAxisAlignment:
                                               MainAxisAlignment.center,
                                           crossAxisAlignment:
                                               CrossAxisAlignment.center,
                                           children: [
+                                            const Icon(
+                                              AntDesign.frowno,
+                                              color: Colors.red,
+                                              size: 30,
+                                            ),
+                                            const SizedBox(
+                                              height: 15,
+                                            ),
                                             Text(
-                                              '데이터가 전달되지 않았습니다.',
-                                              maxLines: 2,
+                                              fb.status_pdf,
                                               textAlign: TextAlign.center,
                                               style: TextStyle(
-                                                  color: MyTheme.colorgrey,
+                                                  wordSpacing: 2,
+                                                  letterSpacing: 2,
                                                   fontWeight: FontWeight.bold,
-                                                  fontSize: contentTextsize()),
-                                              overflow: TextOverflow.ellipsis,
-                                            )
+                                                  fontSize: contentTextsize(),
+                                                  color: MyTheme.colororigred),
+                                            ),
+                                            const SizedBox(
+                                              height: 15,
+                                            ),
+                                            Text(
+                                              'x버튼을 클릭하여 재시도해주세요',
+                                              textAlign: TextAlign.center,
+                                              style: TextStyle(
+                                                  wordSpacing: 2,
+                                                  letterSpacing: 2,
+                                                  fontWeight: FontWeight.normal,
+                                                  fontSize:
+                                                      contentsmallTextsize(),
+                                                  color:
+                                                      MyTheme.colorgreyshade),
+                                            ),
                                           ],
                                         );
                                       } else {
@@ -496,10 +505,9 @@ PDFDashboard(
                                     });
                                   },
                                 )
-                              : SfPdfViewer.file(
-                                  File(uiset.filepaths),
+                              : SfPdfViewer.file(File(uiset.filepaths),
                                   controller: pdfViewerController,
-                                ))
+                                  interactionMode: PdfInteractionMode.pan))
                           : Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               crossAxisAlignment: CrossAxisAlignment.center,
@@ -718,7 +726,7 @@ Viewdrawerbox(section) {
       return FutureBuilder(
         future: fb.Fetchvoice(),
         builder: (context, snapshot) {
-          if (snapshot.hasData || fb.status_mp3 == 'Go') {
+          if (snapshot.hasData || fb.status_mp3 == '') {
             return SizedBox(
                 child: Column(
               mainAxisAlignment: MainAxisAlignment.center,

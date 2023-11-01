@@ -15,6 +15,7 @@ class UIPart extends GetxController {
   int pagenumber = 0;
   Uint8List filebytes = Uint8List(1);
   String filename = '';
+  String postfilepaths = '';
   String filepaths = '';
   String txtpaths = '';
   String mp3paths = '';
@@ -248,21 +249,14 @@ class UIPart extends GetxController {
     notifyChildrens();
   }
 
-  void setpdffilepath(String what) {
-    filepaths = what;
+  void setpdffilepath(String what, int where) {
+    if (where == 0) {
+      postfilepaths = what;
+    } else {
+      filepaths = what;
+    }
+
     setclickedpdf(true);
-    update();
-    notifyChildrens();
-  }
-
-  void settxtfilepath(String what) {
-    txtpaths = what;
-    update();
-    notifyChildrens();
-  }
-
-  void settxtfilecontent(String what) {
-    txtcontents = what;
     update();
     notifyChildrens();
   }

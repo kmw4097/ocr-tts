@@ -134,7 +134,7 @@ contentbody(context) {
                             wordSpacing: 2,
                             letterSpacing: 2,
                             fontWeight: FontWeight.bold,
-                            fontSize: contentsmallTextsize(),
+                            fontSize: 15,
                             color: MyTheme.colorgrey),
                         overflow: TextOverflow.ellipsis,
                       )),
@@ -148,7 +148,7 @@ contentbody(context) {
                         },
                         child: Icon(
                           AntDesign.minussquareo,
-                          size: iconsize(),
+                          size: 25,
                           color: MyTheme.colororigred,
                         ),
                       ),
@@ -160,7 +160,7 @@ contentbody(context) {
                         },
                         child: Icon(
                           AntDesign.plussquareo,
-                          size: iconsize(),
+                          size: 25,
                           color: MyTheme.colorblack,
                         ),
                       ),
@@ -207,7 +207,7 @@ contentbody(context) {
           const SizedBox(
             height: 20,
           ),
-          GetBuilder<UIPart>(builder: (_) {
+          /*GetBuilder<UIPart>(builder: (_) {
             return SizedBox(
               child: Row(
                 children: [
@@ -253,7 +253,7 @@ contentbody(context) {
           }),
           const SizedBox(
             height: 20,
-          ),
+          ),*/
           GetBuilder<UIPart>(builder: (_) {
             return SizedBox(
               child: Row(
@@ -276,7 +276,7 @@ contentbody(context) {
                             wordSpacing: 2,
                             letterSpacing: 2,
                             fontWeight: FontWeight.bold,
-                            fontSize: contentsmallTextsize(),
+                            fontSize: 15,
                             color: MyTheme.colorgrey),
                         overflow: TextOverflow.ellipsis,
                       )),
@@ -287,7 +287,7 @@ contentbody(context) {
                     },
                     child: Icon(
                       Ionicons.checkmark_done_outline,
-                      size: iconsize(),
+                      size: 25,
                       color: MyTheme.colororigred,
                     ),
                   )

@@ -38,7 +38,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     scrollController = ScrollController();
     textcontroller = TextEditingController();
     pdfViewerController = PdfViewerController();
-    fb.setAudio();
+    fb.setAudio('reset');
     fb.player.onDurationChanged.listen((newDuration) {
       fb.setDuration(newDuration);
     });
