@@ -53,6 +53,7 @@ dependencies:
   animated_text_kit:
   flutter_icon_snackbar:
   audioplayers:
+  simple_circular_progress_bar:
   # Use these library for get http async
   get: 
   get_storage:

@@ -73,7 +73,7 @@ def run():
     device = torch.device(0 if torch.cuda.is_available() else 'cpu')
 
     # pdf,img 디렉토리
-    model_dir = os.path.dirname(os.path.realpath(__file__))
+    model_dir = os.path.dirname(os.path.realpath(__file__)).replace('\\', '/')
     top_dir = Path(model_dir).parent
 
     pdf_dir= str(top_dir) + '/PDF'

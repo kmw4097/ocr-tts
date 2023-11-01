@@ -100,7 +100,7 @@ class AppBarCustom extends StatelessWidget {
                                                     wordSpacing: 2,
                                                     letterSpacing: 2,
                                                     fontWeight: FontWeight.bold,
-                                                    fontSize: contentTextsize(),
+                                                    fontSize: 18,
                                                     color: MyTheme.colorblack),
                                                 overflow: TextOverflow.ellipsis,
                                               );
