@@ -1,16 +1,20 @@
 import sys
 import os
 import subprocess
+import platform
 import importlib.util
 from pathlib import Path
-model_dir = os.path.dirname(os.path.realpath(__file__))
-sys.path.append(model_dir)
+
+module_dir = os.path.dirname(os.path.realpath(__file__))
+sys.path.insert(0,module_dir)
+
+USER_OS = platform.system()
 
 try:
     import torch
 
     # if not work [pip install pdf2image] code, you have to use this code first;
-    # [brew install poppler] or [conda install -c conda-forge poppler]
+    # [brew install poppler] -> MacOS or [conda install -c conda-forge poppler] -> Use Conda Env.
     from pdf2image import convert_from_path
     from pyssml.PySSML import PySSML
 except:
@@ -28,23 +32,24 @@ except:
     from pdf2image import convert_from_path
     from pyssml.PySSML import PySSML
     print('import done')
+
+
 try:
     from yolov5.models.experimental import attempt_load
-    from detect.detection import text_detection
     from recognition.model import RecogModel
+    from detect.detection import text_detection
     from TTS.tts import run_tts, make_ssml
     from utils.util import sorting_bounding_box
     from utils.general import *
     from data.image_preprocessing import Load_Image
     import glob
-    import easydict
 except:
     subprocess.run([sys.executable, '-m', 'pip', 'install',
                     'numpy','requests','torchvision',
-                   'opencv-python','boto3','easydict'
-                    ])
+                   'opencv-python','boto3'
+                   ])
 
-    install_list = ['numpy','requests','torchvision','opencv-python','boto3','easydict']
+    install_list = ['numpy','requests','torchvision','opencv-python','boto3']
     while len(install_list) == 0:
         for lib in install_list:
             spec = importlib.util.find_spec(lib)
@@ -52,8 +57,8 @@ except:
                 install_list.remove(lib)
     print('install done')
     from yolov5.models.experimental import attempt_load
-    from detect.detection import text_detection
     from recognition.model import RecogModel
+    from detect.detection import text_detection
     from TTS.tts import run_tts, make_ssml
     from utils.util import sorting_bounding_box
     from utils.general import *
@@ -78,9 +83,17 @@ def run():
     for pdf in os.listdir(pdf_dir):
         if pdf =='.DS_Store':
             continue
-        pages = convert_from_path(os.path.join(pdf_dir,pdf), dpi=600,
-                                  #poppler_path=model_dir+'/poppler-23.08.0/Library/bin'
-        )
+
+        # Check this page if you want to know some detail.
+        # -> [https://github.com/Belval/pdf2image]
+        # On Windows
+        if USER_OS == 'Windows':
+            pages = convert_from_path(os.path.join(pdf_dir,pdf), dpi=600,
+                                      poppler_path=model_dir+'/poppler-23.08.0/Library/bin')
+        # MacOS, Linux, etc.
+        else:
+            pages = convert_from_path(os.path.join(pdf_dir,pdf), dpi=600)
+
         for j, page in enumerate(pages):
             page.save(f'{img_dir}/{os.path.basename(pdf)[:-4]}_page{j + 1:0>2d}.png')
 
