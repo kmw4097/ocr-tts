@@ -1,5 +1,6 @@
 import torch
 import os
+
 from utils.util import *
 from .modules import VGG_FeatureExtractor, BidirectionalLSTM
 from .recognition import text_inference

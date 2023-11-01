@@ -11,7 +11,7 @@ import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))
 
 from viewer import Viewer
-
+from OCR_MODEL import main
 
 
 # Create your views here.
@@ -25,6 +25,7 @@ class ConvertView(viewsets.ModelViewSet):
         return {'fileName' : self.my_viewer.fName, 'pdfFilePath' : self.my_viewer.outputPath}
     
     def PdfFileToMp3(self):
+        main.run()
         return {'mp3FilePath' : ''}
 
     # url : http://localhost:8000/convert/ConvertFile
@@ -46,8 +47,6 @@ class ConvertView(viewsets.ModelViewSet):
     #http://localhost:8000/convert/GetPath
     @action(detail = False, methods=['GET'])
     def GetPath(self, request):
-        #user_request = request.data
-        #request_file = user_request['fileName']
         request_file = request.GET['fileName']
         file_info = self.queryset.filter(fileName = request_file)
         serializer = self.get_serializer(file_info, many=True)
