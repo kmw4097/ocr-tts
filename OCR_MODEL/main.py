@@ -89,7 +89,7 @@ def run(file_name=''): # file_name으로 pdf file 이름 받아와서 이 파일
     #######################  수정  ###########################
     MP3_PATH = os.path.join(str(top_dir),'MP3',file_name+'.mp3').replace('\\','/')
     #########################################################
-    
+
     #pdf->image (all pdf file)
     
     '''
@@ -97,7 +97,7 @@ def run(file_name=''): # file_name으로 pdf file 이름 받아와서 이 파일
         if pdf =='.DS_Store':
             continue
 
-        # Check this page if you want to know some detail.
+        # Check this page if you want to know more detail.
         # -> [https://github.com/Belval/pdf2image]
         # On Windows
         if USER_OS == 'Windows':
@@ -115,7 +115,7 @@ def run(file_name=''): # file_name으로 pdf file 이름 받아와서 이 파일
     # pdf -> image ('file_name' pdf file only)
 
     pdf = file_name + '.pdf'
-    # Check this page if you want to know some detail.
+    # Check this page if you want to know more detail.
     # -> [https://github.com/Belval/pdf2image]
     # On Windows
     if USER_OS == 'Windows':
