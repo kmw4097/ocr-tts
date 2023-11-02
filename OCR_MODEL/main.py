@@ -219,5 +219,5 @@ def run(file_name=''):  # file_name으로 pdf file 이름 받아와서 이 파�
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    run(file_name='example1')
+    run(file_name='')
 # See PyCharm help at https://www.jetbrains.com/help/pycharm/
