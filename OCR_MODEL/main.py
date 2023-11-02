@@ -85,8 +85,6 @@ def run(file_name=''):  # file_name으로 pdf file 이름 받아와서 이 파�
     top_dir = Path(model_dir).parent
     if not os.path.exists(str(model_dir)+'/images'):
         os.mkdir(str(model_dir)+'/images')
-    else:
-        print('exists')
     pdf_dir = str(top_dir) + '/PDF'
     img_dir = model_dir + '/images'
     #######################  수정  ###########################
