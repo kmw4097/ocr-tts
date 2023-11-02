@@ -12,6 +12,7 @@ USER_OS = platform.system()
 
 try:
     import torch
+    from pydub import AudioSegment
 
     # if not work [pip install pdf2image] code, you have to use this code first;
     # [brew install poppler] -> MacOS or [conda install -c conda-forge poppler] -> Use Conda Env.
@@ -19,8 +20,8 @@ try:
     from pyssml.PySSML import PySSML
 except:
     subprocess.run([sys.executable, '-m', 'pip', 'install',
-                    'torch', 'pdf2image', 'pyssml','numpy','pandas'])
-    install_list = ['torch','pdf2image','pyssml','numpy','pandas']
+                    'pydub', 'torch', 'pdf2image', 'pyssml','numpy','pandas'])
+    install_list = ['pydub','torch','pdf2image','pyssml','numpy','pandas']
 
     while len(install_list) == 0:
         for lib in install_list:
@@ -29,6 +30,7 @@ except:
                 install_list.remove(lib)
     print('install done')
     import torch
+    from pydub import AudioSegment
     from pdf2image import convert_from_path
     from pyssml.PySSML import PySSML
     print('import done')
@@ -66,9 +68,14 @@ except:
     import glob
     print('import done')
 
+MP3_PATH = ''
 
+    #######################  수정  ###########################
+def run(file_name=''): # file_name으로 pdf file 이름 받아와서 이 파일 한정으로 mp3 파일 생성
 
-def run():
+    global MP3_PATH
+    #########################################################
+
     #device 설정
     device = torch.device(0 if torch.cuda.is_available() else 'cpu')
 
@@ -79,7 +86,13 @@ def run():
     pdf_dir= str(top_dir) + '/PDF'
     img_dir= model_dir + '/images'
 
-    #pdf->image
+    #######################  수정  ###########################
+    MP3_PATH = os.path.join(str(top_dir),'MP3',file_name+'.mp3').replace('\\','/')
+    #########################################################
+    
+    #pdf->image (all pdf file)
+    
+    '''
     for pdf in os.listdir(pdf_dir):
         if pdf =='.DS_Store':
             continue
@@ -95,8 +108,27 @@ def run():
             pages = convert_from_path(os.path.join(pdf_dir,pdf), dpi=600)
 
         for j, page in enumerate(pages):
-            page.save(f'{img_dir}/{os.path.basename(pdf)[:-4]}_page{j + 1:0>2d}.png')
+            page.save(f'{img_dir}/{os.path.basename(pdf)[:-4]}_page{j + 1:0>2d}.png') 
+    '''
 
+    #######################  수정  ###########################
+    # pdf -> image ('file_name' pdf file only)
+
+    pdf = file_name + '.pdf'
+    # Check this page if you want to know some detail.
+    # -> [https://github.com/Belval/pdf2image]
+    # On Windows
+    if USER_OS == 'Windows':
+        pages = convert_from_path(os.path.join(pdf_dir,pdf), dpi=600,
+                                    poppler_path=model_dir+'/poppler-23.08.0/Library/bin')
+    # MacOS, Linux, etc.
+    else:
+        pages = convert_from_path(os.path.join(pdf_dir,pdf), dpi=600)
+
+    for j, page in enumerate(pages):
+        page.save(f'{img_dir}/{file_name}_page{j + 1:0>2d}.png')
+
+    #########################################################
 
     #detection model setting
     detection_weight= Path(model_dir +'/detect/best.pt')
@@ -112,8 +144,11 @@ def run():
     recognition_model=RecogModel(recognition_weight)
 
 
-
     #Inference
+    #######################  수정  ###########################
+    mp3_path_per_page = []
+    #########################################################
+
     for img_o in os.listdir(img_dir):
         bbox_list = []
         pred_list = []
@@ -147,8 +182,33 @@ def run():
 
         # tts ssml version
         ssml_doc = make_ssml(sorted_bbox_list)
+
+        #######################  수정  ###########################
+
+        mp3_path = os.path.join(str(top_dir),'MP3',img_o[:-4]+'_ssml' + '.mp3').replace('\\','/')
         # print(ssml_doc)
-        # run_tts(ssml_doc, str(top_dir)+'/MP3/'+img_o[:-4]+'_ssml' + '.mp3')
+        # run_tts(ssml_doc, mp3Path)
+
+        # save mp3 path in list for merge them
+        mp3_path_per_page.append(mp3_path)
+
+        #########################################################
+
+    #######################  수정  ###########################
+    # merge mp3 file per pdf file page
+    result_file = None
+    for path in mp3_path_per_page:
+        if result_file is None:
+            result_file = AudioSegment.from_mp3(path)
+        else:
+            f_to_merge = AudioSegment.from_mp3(path)
+            result_file += f_to_merge
+        # remove mp3 file on path
+        os.remove(path)
+    
+    # save merged mp3 file
+    result_file.export(MP3_PATH, format='mp3')
+    #########################################################
 
 
     for file in os.listdir(img_dir):
@@ -156,5 +216,5 @@ def run():
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    run()
+    run(file_name='')
 # See PyCharm help at https://www.jetbrains.com/help/pycharm/

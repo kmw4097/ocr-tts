@@ -21,12 +21,12 @@ class ConvertView(viewsets.ModelViewSet):
     my_viewer = Viewer()
 
     def UserFileToPDF(self, path=''):
-        self.my_viewer(path= path)
+        self.my_viewer(path = path)
         return {'fileName' : self.my_viewer.fName, 'pdfFilePath' : self.my_viewer.outputPath}
     
-    def PdfFileToMp3(self):
-        main.run()
-        return {'mp3FilePath' : ''}
+    def PdfFileToMp3(self, fileName = ''):
+        main.run(file_name = fileName)
+        return {'mp3FilePath' : main.MP3_PATH}
 
     # url : http://localhost:8000/convert/ConvertFile
     @action(detail=False, methods=['POST'])
@@ -34,7 +34,7 @@ class ConvertView(viewsets.ModelViewSet):
         file_info = request.data
         filePath = file_info['filePath']
         pdfFileInfo = self.UserFileToPDF(path=filePath)
-        mp3FileInfo = self.PdfFileToMp3()
+        mp3FileInfo = self.PdfFileToMp3(fileName = pdfFileInfo['fileName'])
         
         Convert.objects.create(
             fileName = pdfFileInfo['fileName'],
