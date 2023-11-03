@@ -48,6 +48,7 @@ Download csv file and check your iam account and password
 
 ![aws readme](https://github.com/kmw4097/ocr-tts/assets/98750892/d9a8bc76-6aa1-448b-af87-f8ab9626730d)
 
+save your access key ID and secret access key(username_accessKeys.csv)
 
 5. Setting aws cli in Local environment
 
@@ -65,7 +66,7 @@ Download csv file and check your iam account and password
   # Register with profile name
   aws configure --profile [ProfileName]
 
-  # enter your Access key, secret key
+  # enter your Access key, secret key(username_accessKeys.csv)
   AWS Access Key ID [None]:
   AWS Secret Access Key [None]: 
   Default region name [None]: ap-northeast-1
