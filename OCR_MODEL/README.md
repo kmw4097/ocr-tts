@@ -44,6 +44,11 @@ Download csv file and check your iam account and password
 
 ![aws_3](https://github.com/kmw4097/OCR/assets/98750892/4b402c4a-7a0b-4d0d-9d51-203b51162ea6)
 
+![image](https://github.com/kmw4097/ocr-tts/assets/98750892/bfd6e325-74fe-4889-9538-c8f9b6ff4e25)
+
+![aws readme](https://github.com/kmw4097/ocr-tts/assets/98750892/d9a8bc76-6aa1-448b-af87-f8ab9626730d)
+
+
 5. Setting aws cli in Local environment
 
 * Install
