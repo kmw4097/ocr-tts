@@ -86,6 +86,7 @@ save your access key ID and secret access key(username_accessKeys.csv)
   You can check your profile information in .aws/config and .aws/credentials</br>
   Insert your profile name in OCR_MODEL/TTS/tts.py line 97
   ```session = Session(profile_name=[your ProfileName])```
-   
+
+If you need more details, Click [here](https://inpa.tistory.com/entry/AWS-%F0%9F%93%9A-%EC%95%84%EB%A7%88%EC%A1%B4-%EA%B0%80%EC%9E%85-%EC%A0%88%EC%B0%A8-%C2%A7-%EB%B3%B4%EC%95%88-%EC%84%A4%EC%A0%95-MFA-IAM-%EC%A0%95%EB%A6%AC)
 
 
